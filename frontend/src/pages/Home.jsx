@@ -52,45 +52,57 @@ const Home = () => {
       <section className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 z-0">
-          {settings?.heroType === 'both' && settings?.heroMediaUrl ? (
-            <>
-              {/* Background Image */}
-              <img
-                src={getMediaUrl(settings.heroMediaUrl)}
-                alt="Hero Background"
-                className="w-full h-full object-cover"
-              />
-              {/* Video Overlay (if heroMediaUrlMobile is set as video) */}
-              {settings.heroMediaUrlMobile && settings.heroMediaUrlMobile.match(/\.(mp4|webm|mov)$/i) && (
+          {(() => {
+            if (settings?.heroType === 'both' && settings?.heroMediaUrl) {
+              return (
+                <>
+                  {/* Background Image */}
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrl)}
+                    alt="Hero Background"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Video Overlay (if heroMediaUrlMobile is set as video) */}
+                  {settings.heroMediaUrlMobile && settings.heroMediaUrlMobile.match(/\.(mp4|webm|mov)$/i) && (
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover opacity-50"
+                    >
+                      <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
+                    </video>
+                  )}
+                </>
+              );
+            } else if (settings?.heroType === 'video' && settings?.heroMediaUrl) {
+              return (
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-50"
+                  className="w-full h-full object-cover"
                 >
-                  <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
+                  <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
                 </video>
-              )}
-            </>
-          ) : settings?.heroType === 'video' && settings?.heroMediaUrl ? (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            >
-              <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
-            </video>
-          ) : settings?.heroMediaUrl ? (
-            <img
-              src={getMediaUrl(settings.heroMediaUrl)}
-              alt="Hero"
-              className="w-full h-full object-cover"
-            />
-            <div className="w-full h-full gradient-bg" />
-          )}
+              );
+            } else if (settings?.heroMediaUrl) {
+              return (
+                <>
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrl)}
+                    alt="Hero"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="w-full h-full gradient-bg" />
+                </>
+              );
+            } else {
+              return <div className="w-full h-full gradient-bg" />;
+            }
+          })()}
           <div className="absolute inset-0 bg-black/60" />
         </div>
 
