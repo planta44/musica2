@@ -5,6 +5,7 @@ import { FaPlay, FaShoppingCart, FaTicketAlt, FaHeart } from 'react-icons/fa'
 import { getSettings, getMusic, getUpcomingEvents, getMerch } from '../lib/api'
 import { useStore } from '../store/useStore'
 import { getMediaUrl } from '../lib/utils'
+import ParticleEffect from '../components/ParticleEffect'
 
 const Home = () => {
   const [settings, setSettings] = useState(null)
@@ -48,7 +49,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           {settings?.heroType === 'both' && settings?.heroMediaUrl ? (
@@ -88,44 +89,34 @@ const Home = () => {
               alt="Hero"
               className="w-full h-full object-cover"
             />
-          ) : (
             <div className="w-full h-full gradient-bg" />
           )}
           <div className="absolute inset-0 bg-black/60" />
         </div>
 
-        {/* Particles effect (optional) */}
+        {/* Particles effect */}
         {settings?.enableParticles && (
-          <div className="absolute inset-0 z-0">
-            {[...Array(50)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-primary/30 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -30, 0],
-                  opacity: [0.3, 1, 0.3],
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                }}
-              />
-            ))}
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <ParticleEffect />
           </div>
         )}
 
-        {/* Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        {/* Content with parallax */}
+        <div 
+          className="relative z-20 text-center px-4 max-w-5xl mx-auto"
+          style={settings?.enableParallax ? { 
+            transform: 'translateZ(0)',
+            willChange: 'transform'
+          } : {}}
+        >
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-5xl md:text-7xl font-bold mb-6 gradient-text"
+            style={settings?.enableParallax ? {
+              transform: `translateY(${typeof window !== 'undefined' ? window.scrollY * 0.5 : 0}px)`
+            } : {}}
           >
             {settings?.heroTitle || 'Welcome'}
           </motion.h1>
@@ -287,10 +278,10 @@ const Home = () => {
                       />
                     )}
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2">{item.name}</h3>
-                    <p className="text-2xl font-bold text-primary mb-4">${item.price}</p>
-                    <Link to="/merch" className="btn-secondary w-full text-center">
+                  <div className="p-4">
+                    <h3 className="text-lg md:text-xl font-bold mb-2 line-clamp-1">{item.name}</h3>
+                    <p className="text-xl md:text-2xl font-bold text-primary mb-3">${item.price}</p>
+                    <Link to="/merch" className="btn-secondary w-full text-center block py-2 text-sm md:text-base whitespace-nowrap">
                       Shop Now
                     </Link>
                   </div>

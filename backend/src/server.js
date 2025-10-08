@@ -59,21 +59,41 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/', limiter);
 
 // Static uploads folder (for development)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Keep alive endpoint with database check
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected'
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message
+    })
+  }
+})
+
+// Extended timeout for long-running requests
+app.use((req, res, next) => {
+  req.setTimeout(300000) // 5 minutes
+  res.setTimeout(300000)
+  next()
 });
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/content', contentRoutes);
 app.use('/api/music', musicRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/gallery', galleryRoutes);

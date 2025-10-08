@@ -1,11 +1,22 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { Elements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { Toaster } from 'react-hot-toast'
 import { useStore } from './store/useStore'
 import { useTheme } from './hooks/useTheme'
 import { getSettings } from './lib/api'
+
+// Scroll to top component
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+
+  return null
+}
 
 // Layout
 import Navbar from './components/Navbar'
@@ -53,6 +64,7 @@ function App() {
   const content = (
     <Router>
         <div className="min-h-screen bg-black text-white">
+          <ScrollToTop />
           <Navbar />
           <main>
             <Routes>
