@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>If you see this, Vite is serving files correctly</h1>
+    <div id="api-test">Testing API...</div>
+    
+    <script>
+        fetch('http://localhost:3001/api/content/settings')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('api-test').innerHTML = 
+                    'API Working! Settings: ' + JSON.stringify(data, null, 2);
+            })
+            .catch(err => {
+                document.getElementById('api-test').innerHTML = 
+                    'API Error: ' + err.message;
+            });
+    </script>
+</body>
+</html>
