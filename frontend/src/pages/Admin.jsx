@@ -24,8 +24,6 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'ruachkol@gmail.com'
 const AdminLogin = ({ onLogin }) => {
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState(searchParams.get('email') || '')
-  const [passcode, setPasscode] = useState(searchParams.get('passcode') || '')
-  const [useMagicLink, setUseMagicLink] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -42,15 +40,14 @@ const AdminLogin = ({ onLogin }) => {
       }
 
       if (useMagicLink || !passcode) {
-        // Request magic link
-        await requestMagicLink(email)
-        toast.success('Magic link sent to your email!')
-      } else {
-        // Login with passcode
-        const { data } = await login(email, passcode)
+        // Simple email login (no passcode needed)
+        const { data } = await login(email)
         localStorage.setItem('adminToken', data.token)
         onLogin(email)
         toast.success('Login successful!')
+      } else {
+        // This should never be reached since we removed passcode requirement
+        toast.error('Passcode login no longer supported')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -82,34 +79,17 @@ const AdminLogin = ({ onLogin }) => {
             />
           </div>
 
-          {!useMagicLink && (
-            <div>
-              <label className="block text-sm font-semibold mb-2">Passcode</label>
-              <input
-                type="password"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                placeholder="Enter your passcode"
-                className="input-field"
-              />
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
             className="w-full btn-primary disabled:opacity-50"
           >
-            {loading ? 'Processing...' : useMagicLink ? 'Send Magic Link' : 'Login'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
 
-          <button
-            type="button"
-            onClick={() => setUseMagicLink(!useMagicLink)}
-            className="w-full text-sm text-primary hover:text-accent transition-colors"
-          >
-            {useMagicLink ? 'Use Passcode Instead' : 'Use Magic Link Instead'}
-          </button>
+          <p className="text-sm text-gray-400 text-center mt-4">
+            Enter your admin email to login
+          </p>
         </form>
       </motion.div>
     </div>

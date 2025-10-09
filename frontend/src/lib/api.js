@@ -41,7 +41,7 @@ api.interceptors.response.use(
 export const checkAdmin = (email) => api.post('/auth/check-admin', { email })
 export const requestMagicLink = (email) => api.post('/auth/magic-link', { email })
 export const verifyMagicLink = (token) => api.post('/auth/verify-magic', { token })
-export const login = (email, passcode) => api.post('/auth/login', { email, passcode })
+export const login = (email) => api.post('/auth/login', { email })
 
 // Content
 export const getSettings = () => api.get('/content/settings')
