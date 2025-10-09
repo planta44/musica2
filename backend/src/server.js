@@ -44,6 +44,7 @@ const PORT = process.env.PORT || 3001;
 
 // Make io available to routes
 app.set('io', io);
+app.set('trust proxy', 1); // Trust the first proxy (Render)
 
 // Rate limiting - More permissive for development
 const limiter = rateLimit({
