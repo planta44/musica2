@@ -9,7 +9,19 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Database
+import prisma from './lib/prisma.js';
+
 // Routes
+import authRoutes from './routes/auth.js';
+import adminRoutes from './routes/admin.js';
+import contentRoutes from './routes/content.js';
+import musicRoutes from './routes/music.js';
+import videoRoutes from './routes/videos.js';
+import galleryRoutes from './routes/gallery.js';
+import eventRoutes from './routes/events.js';
+import merchRoutes from './routes/merch.js';
+import subscriberRoutes from './routes/subscribers.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import contentRoutes from './routes/content.js';
