@@ -28,6 +28,6 @@ services:
       - key: SMTP_PORT
         value: "587"
       - key: SMTP_USER
-        value: your-email@gmail.com
+        value: johnsonmbuguamuhabi@gmail.com
       - key: SMTP_PASSWORD
-        value: your-app-password
+        value: pfqo ptxr fkab otny
