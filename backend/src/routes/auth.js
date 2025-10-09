@@ -85,22 +85,22 @@ router.post('/verify-magic', async (req, res) => {
   }
 });
 
-// Simple email-only login
+// Passcode login
 router.post('/login', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, passcode } = req.body;
 
     if (email.toLowerCase() !== process.env.ADMIN_EMAIL?.toLowerCase()) {
       return res.status(403).json({ error: 'Unauthorized email' });
     }
 
-    // Create a simple admin record if it doesn't exist
     const admin = await prisma.admin.upsert({
       where: { email: email.toLowerCase() },
       update: {},
       create: { email: email.toLowerCase() }
     });
 
+    // For now, accept any passcode or no passcode
     const token = jwt.sign(
       { email: admin.email, id: admin.id },
       process.env.JWT_SECRET,
