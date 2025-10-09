@@ -85,24 +85,22 @@ router.post('/verify-magic', async (req, res) => {
   }
 });
 
-// Passcode login
+// Simple email-only login
 router.post('/login', async (req, res) => {
   try {
-    const { email, passcode } = req.body;
+    const { email } = req.body;
 
-    if (email.toLowerCase() !== process.env.ADMIN_EMAIL.toLowerCase()) {
+    if (email.toLowerCase() !== process.env.ADMIN_EMAIL?.toLowerCase()) {
       return res.status(403).json({ error: 'Unauthorized email' });
     }
 
-    const admin = await prisma.admin.findUnique({
-      where: { email: email.toLowerCase() }
+    // Create a simple admin record if it doesn't exist
+    const admin = await prisma.admin.upsert({
+      where: { email: email.toLowerCase() },
+      update: {},
+      create: { email: email.toLowerCase() }
     });
 
-    if (!admin) {
-      return res.status(401).json({ error: 'Admin account not found' });
-    }
-
-    // Skip passcode validation - just verify email matches
     const token = jwt.sign(
       { email: admin.email, id: admin.id },
       process.env.JWT_SECRET,
@@ -111,6 +109,7 @@ router.post('/login', async (req, res) => {
 
     res.json({ token, email: admin.email });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: error.message });
   }
 });
