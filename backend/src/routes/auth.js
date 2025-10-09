@@ -89,31 +89,26 @@ router.post('/verify-magic', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, passcode } = req.body;
-    
+
     if (email.toLowerCase() !== process.env.ADMIN_EMAIL.toLowerCase()) {
       return res.status(403).json({ error: 'Unauthorized email' });
     }
-    
+
     const admin = await prisma.admin.findUnique({
       where: { email: email.toLowerCase() }
     });
-    
-    if (!admin || !admin.passcode) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+
+    if (!admin) {
+      return res.status(401).json({ error: 'Admin account not found' });
     }
-    
-    const isValid = await bcrypt.compare(passcode, admin.passcode);
-    
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
+
+    // Skip passcode validation - just verify email matches
     const token = jwt.sign(
       { email: admin.email, id: admin.id },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    
+
     res.json({ token, email: admin.email });
   } catch (error) {
     res.status(500).json({ error: error.message });
