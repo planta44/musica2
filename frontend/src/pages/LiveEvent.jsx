@@ -17,7 +17,7 @@ const LiveEvent = () => {
   const [subscriber, setSubscriber] = useState(null)
   const [joined, setJoined] = useState(false)
   
-  // Media controls
+  // Media control
   const [micEnabled, setMicEnabled] = useState(false)
   const [videoEnabled, setVideoEnabled] = useState(false)
   const [handRaised, setHandRaised] = useState(false)
