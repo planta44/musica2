@@ -238,15 +238,19 @@ const Home = () => {
         <section className="section-padding gradient-bg">
           <div className="container-custom">
             <h2 className="text-4xl font-bold mb-12 text-center gradient-text">About</h2>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto space-y-8">
               {aboutSections.slice(0, 1).map((section, index) => {
-                // Extract text content and limit to ~90 words
+                // Extract text content and limit words based on screen size
                 const tempDiv = document.createElement('div')
                 tempDiv.innerHTML = section.content
                 const textContent = tempDiv.textContent || tempDiv.innerText || ''
                 const words = textContent.trim().split(/\s+/)
-                const truncatedText = words.slice(0, 90).join(' ')
-                const isTruncated = words.length > 90
+                
+                // 60 words for mobile, 90 for desktop (we'll use CSS to show/hide)
+                const mobileText = words.slice(0, 60).join(' ')
+                const desktopText = words.slice(0, 90).join(' ')
+                const isMobileTruncated = words.length > 60
+                const isDesktopTruncated = words.length > 90
                 
                 return (
                   <motion.div
@@ -254,15 +258,23 @@ const Home = () => {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="card p-8 text-center"
                   >
-                    <h3 className="text-2xl font-bold mb-4 gradient-text">{section.title}</h3>
-                    <p className="text-gray-300 leading-relaxed text-lg mb-6">
-                      {truncatedText}{isTruncated && '...'}
-                    </p>
-                    <Link to="/about" className="btn-primary inline-flex items-center gap-2">
-                      Read More About Us
-                    </Link>
+                    <div className="card p-8">
+                      <h3 className="text-2xl font-bold mb-4 gradient-text">{section.title}</h3>
+                      {/* Mobile text (60 words) */}
+                      <p className="md:hidden text-gray-300 leading-relaxed text-lg text-left">
+                        {mobileText}{isMobileTruncated && '...'}
+                      </p>
+                      {/* Desktop text (90 words) */}
+                      <p className="hidden md:block text-gray-300 leading-relaxed text-lg text-left">
+                        {desktopText}{isDesktopTruncated && '...'}
+                      </p>
+                    </div>
+                    <div className="text-center mt-8">
+                      <Link to="/about" className="btn-outline">
+                        Read More
+                      </Link>
+                    </div>
                   </motion.div>
                 )
               })}
