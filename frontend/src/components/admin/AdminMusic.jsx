@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa'
 import { getMusic, createMusicItem, updateMusicItem, deleteMusicItem, uploadFile } from '../../lib/api'
-import { getMediaUrl } from '../../lib/utils'
 
 const AdminMusic = () => {
   const [items, setItems] = useState([])
@@ -222,7 +221,7 @@ const AdminMusic = () => {
         {items.map((item) => (
           <div key={item.id} className="card p-4">
             {item.thumbnailUrl && (
-              <img src={getMediaUrl(item.thumbnailUrl)} alt={item.title} className="w-full h-40 object-cover rounded mb-3" />
+              <img src={item.thumbnailUrl} alt={item.title} className="w-full h-40 object-cover rounded mb-3" />
             )}
             <h3 className="font-bold text-lg mb-1">{item.title}</h3>
             {item.artist && <p className="text-sm text-gray-400 mb-2">{item.artist}</p>}
