@@ -79,22 +79,19 @@ api.interceptors.response.use(
 )
 
 // Auth
-export const checkAdmin = (email) => api.post('/auth/check-admin', { email })
 export const requestMagicLink = (email) => api.post('/auth/magic-link', { email })
 export const verifyMagicLink = (token) => api.post('/auth/verify-magic', { token })
 export const login = (email, passcode) => api.post('/auth/login', { email, passcode })
 
 // Content
 export const getSettings = () => api.get('/content/settings')
-export const updateSettings = (data) => api.put('/content/settings', data)
-export const getAboutSections = () => api.get('/content/about')
-export const createAboutSection = (data) => api.post('/content/about', data)
-export const updateAboutSection = (id, data) => api.put(`/content/about/${id}`, data)
-export const deleteAboutSection = (id) => api.delete(`/content/about/${id}`)
 
-// Music
-export const getMusic = () => api.get('/music')
-export const getMusicItem = (id) => api.get(`/music/${id}`)
+// Purchases
+export const createPurchase = (data) => api.post('/purchases/create', data)
+export const verifyPurchase = (accessToken) => api.get(`/purchases/verify/${accessToken}`)
+export const checkPurchase = (contentType, contentId, email) => 
+  api.get(`/purchases/check?contentType=${contentType}&contentId=${contentId}&email=${email}`)
+export const getMyPurchases = (email) => api.get(`/purchases/my-purchases?email=${email}`)
 export const createMusicItem = (data) => api.post('/music', data)
 export const updateMusicItem = (id, data) => api.put(`/music/${id}`, data)
 export const deleteMusicItem = (id) => api.delete(`/music/${id}`)

@@ -71,15 +71,18 @@ model MusicItem {
 }
 
 model Video {
-  id           String   @id @default(uuid())
-  title        String
-  description  String?
-  thumbnailUrl String?
-  videoUrl     String // YouTube, Vimeo, or direct URL
-  videoType    String   @default("youtube") // youtube, vimeo, upload
-  displayOrder Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  thumbnailUrl  String?
+  videoUrl      String // YouTube, Vimeo, or direct URL
+  videoType     String   @default("youtube") // youtube, vimeo, upload
+  price         Float?
+  isPurchasable Boolean  @default(false)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  purchases     Purchase[]
 }
 
 model GalleryAlbum {
@@ -198,13 +201,22 @@ model Payment {
 }
 
 model Purchase {
-  id           String    @id @default(uuid())
-  musicItemId  String
-  musicItem    MusicItem @relation(fields: [musicItemId], references: [id])
+  id            String    @id @default(uuid())
+  contentType   String    // "music" or "video"
+  musicItemId   String?
+  musicItem     MusicItem? @relation(fields: [musicItemId], references: [id])
+  videoId       String?
+  video         Video?    @relation(fields: [videoId], references: [id])
   customerEmail String
-  accessToken  String    @unique
-  expiresAt    DateTime
-  createdAt    DateTime  @default(now())
+  customerName  String?
+  amount        Float
+  paymentMethod String    @default("paypal") // paypal, stripe, mpesa
+  paymentId     String?   // External payment ID from payment processor
+  paymentStatus String    @default("completed") // pending, completed, failed, refunded
+  accessToken   String    @unique
+  expiresAt     DateTime?  // null for lifetime access
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model ContactSubmission {
