@@ -9,6 +9,9 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Database
+import prisma from './lib/prisma.js';
+
 // Routes
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
