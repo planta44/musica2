@@ -9,7 +9,7 @@ services:
       npm install &&
       npx prisma generate &&
       npx prisma db push --accept-data-loss &&
-      node -e "const { PrismaClient } = require('@prisma/client'); const bcrypt = require('bcryptjs'); const p = new PrismaClient(); (async () => { const h = await bcrypt.hash('2025', 10); await p.admin.upsert({ where: { email: process.env.ADMIN_EMAIL }, update: { passcode: h }, create: { email: process.env.ADMIN_EMAIL, passcode: h } }); console.log('✅ Admin setup complete!'); process.exit(0); })();"
+      node -e "const { PrismaClient } = require('@prisma/client'); const p = new PrismaClient(); (async () => { await p.admin.upsert({ where: { email: process.env.ADMIN_EMAIL }, update: {}, create: { email: process.env.ADMIN_EMAIL } }); console.log('✅ Admin setup complete!'); process.exit(0); })();"
     startCommand: npm start
     healthCheckPath: /api/content/settings
     envVars:
@@ -21,3 +21,13 @@ services:
         value: johnsonmbuguamuhabi@gmail.com
       - key: JWT_SECRET
         value: c75a6b62d207912f813ac27944be56df50deb5156dba1c019dadee806bdb79dc24f452e87ff704a143652ff0e95351b50af94c93f4c0949ee7c2b281e600d1b2
+      - key: FRONTEND_URL
+        value: https://bonke-me.netlify.app/
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: johnsonmbuguamuhabi@gmail.com
+      - key: SMTP_PASSWORD
+        value: pfqo ptxr fkab otny
