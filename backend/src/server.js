@@ -48,8 +48,15 @@ app.set('io', io);
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 1000, // Increased limit for admin usage
+  message: 'Too many requests from this IP, please try again later.',
+  // Skip rate limiting for certain routes
+  skip: (req) => {
+    return req.path.includes('/content/settings') ||
+           req.path.includes('/health') ||
+           req.path.includes('/uploads') ||
+           req.path.startsWith('/api/admin') // Skip rate limiting for admin routes
+  }
 });
 
 // Middleware
