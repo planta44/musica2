@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { authenticateAdmin } from '../middleware/auth.js';
-import { uploadToS3 } from '../utils/storage.js';
+import { uploadFile } from '../utils/storage.js';
 import fs from 'fs/promises';
 
 const router = express.Router();
@@ -59,33 +59,25 @@ router.post('/single', authenticateAdmin, upload.single('file'), async (req, res
     let fileUrl;
     let storageWarning = null;
     
-    // Check if S3 is properly configured (not placeholder values)
-    const hasValidS3Config = 
-      process.env.S3_BUCKET && 
-      process.env.S3_BUCKET !== 'musician-uploads' &&
-      process.env.S3_ACCESS_KEY_ID && 
-      process.env.S3_ACCESS_KEY_ID !== 'your_access_key';
-    
-    // Try to upload to S3 if configured
-    if (hasValidS3Config) {
-      try {
-        fileUrl = await uploadToS3(req.file.path, req.file.filename);
-        // Delete local file after successful upload
+    try {
+      // Try to upload using the generic upload function (tries Cloudinary, then S3, then local)
+      fileUrl = await uploadFile(req.file.path, req.file.filename);
+      
+      // Delete local file after successful cloud upload
+      if (fileUrl.startsWith('http')) {
         await fs.unlink(req.file.path).catch(err => console.error('Failed to delete local file:', err));
-        console.log(`✅ File uploaded to S3: ${fileUrl}`);
-      } catch (s3Error) {
-        console.error('❌ S3 upload failed, using local file:', s3Error.message);
-        fileUrl = `/uploads/${req.file.filename}`;
-        storageWarning = 'S3 upload failed - file stored locally (may be lost on Render restart)';
+      } else {
+        // File is stored locally
+        const isRenderEnv = process.env.RENDER || process.env.RENDER_SERVICE_NAME;
+        if (isRenderEnv) {
+          console.warn('⚠️ WARNING: File stored locally on Render - will be lost on restart! Configure Cloudinary or S3.');
+          storageWarning = 'WARNING: File stored locally on Render. Configure Cloudinary or S3 to persist uploads after restart.';
+        }
       }
-    } else {
-      // Use local file URL (S3 not configured)
+    } catch (error) {
+      console.error('Upload error:', error);
       fileUrl = `/uploads/${req.file.filename}`;
-      const isRenderEnv = process.env.RENDER || process.env.RENDER_SERVICE_NAME;
-      if (isRenderEnv) {
-        console.warn('⚠️ WARNING: File stored locally on Render - will be lost on restart! Configure S3 to persist files.');
-        storageWarning = 'WARNING: File stored locally on Render. Configure S3 in Settings to persist uploads after restart.';
-      }
+      storageWarning = `Upload failed: ${error.message}. File stored locally.`;
     }
     
     res.json({
@@ -107,30 +99,23 @@ router.post('/multiple', authenticateAdmin, upload.array('files', 10), async (re
       return res.status(400).json({ error: 'No files uploaded' });
     }
     
-    // Check if S3 is properly configured
-    const hasValidS3Config = 
-      process.env.S3_BUCKET && 
-      process.env.S3_BUCKET !== 'musician-uploads' &&
-      process.env.S3_ACCESS_KEY_ID && 
-      process.env.S3_ACCESS_KEY_ID !== 'your_access_key';
-    
     const isRenderEnv = process.env.RENDER || process.env.RENDER_SERVICE_NAME;
     let hasLocalStorage = false;
     
     const uploadPromises = req.files.map(async (file) => {
       let fileUrl;
       
-      if (hasValidS3Config) {
-        try {
-          fileUrl = await uploadToS3(file.path, file.filename);
+      try {
+        fileUrl = await uploadFile(file.path, file.filename);
+        
+        // Delete local file after successful cloud upload
+        if (fileUrl.startsWith('http')) {
           await fs.unlink(file.path).catch(err => console.error('Failed to delete local file:', err));
-          console.log(`✅ File uploaded to S3: ${fileUrl}`);
-        } catch (s3Error) {
-          console.error('❌ S3 upload failed for', file.filename, ':', s3Error.message);
-          fileUrl = `/uploads/${file.filename}`;
+        } else {
           hasLocalStorage = true;
         }
-      } else {
+      } catch (error) {
+        console.error('Upload error for', file.filename, ':', error.message);
         fileUrl = `/uploads/${file.filename}`;
         hasLocalStorage = true;
       }
@@ -148,8 +133,8 @@ router.post('/multiple', authenticateAdmin, upload.array('files', 10), async (re
     const response = { files: uploads };
     
     if (hasLocalStorage && isRenderEnv) {
-      console.warn('⚠️ WARNING: Files stored locally on Render - will be lost on restart! Configure S3 to persist files.');
-      response.warning = 'WARNING: Files stored locally on Render. Configure S3 to persist uploads after restart.';
+      console.warn('⚠️ WARNING: Files stored locally on Render - will be lost on restart! Configure Cloudinary or S3.');
+      response.warning = 'WARNING: Files stored locally on Render. Configure Cloudinary or S3 to persist uploads after restart.';
     }
     
     res.json(response);
