@@ -89,6 +89,7 @@ router.post('/verify-magic', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, passcode } = req.body;
+<<<<<<< HEAD
     
     if (email.toLowerCase() !== process.env.ADMIN_EMAIL.toLowerCase()) {
       return res.status(403).json({ error: 'Unauthorized email' });
@@ -108,6 +109,20 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
+=======
+
+    if (email.toLowerCase() !== process.env.ADMIN_EMAIL?.toLowerCase()) {
+      return res.status(403).json({ error: 'Unauthorized email' });
+    }
+
+    const admin = await prisma.admin.upsert({
+      where: { email: email.toLowerCase() },
+      update: {},
+      create: { email: email.toLowerCase() }
+    });
+
+    // For now, accept any passcode or no passcode
+>>>>>>> 326ec2e5de2ac316412e9ab318aecbc5380aa7a2
     const token = jwt.sign(
       { email: admin.email, id: admin.id },
       process.env.JWT_SECRET,
