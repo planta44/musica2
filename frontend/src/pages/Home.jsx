@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaPlay, FaShoppingCart, FaTicketAlt, FaHeart } from 'react-icons/fa'
-import { getSettings, getMusic, getUpcomingEvents, getMerch } from '../lib/api'
+import { FaPlay, FaShoppingCart, FaTicketAlt, FaHeart, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+import { getSettings, getMusic, getUpcomingEvents, getMerch, getAboutSections } from '../lib/api'
 import { useStore } from '../store/useStore'
 import { getMediaUrl } from '../lib/utils'
 import ParticleEffect from '../components/ParticleEffect'
@@ -12,6 +12,7 @@ const Home = () => {
   const [featuredMusic, setFeaturedMusic] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
   const [featuredMerch, setFeaturedMerch] = useState([])
+  const [aboutSections, setAboutSections] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -20,17 +21,19 @@ const Home = () => {
 
   const loadContent = async () => {
     try {
-      const [settingsRes, musicRes, eventsRes, merchRes] = await Promise.all([
+      const [settingsRes, musicRes, eventsRes, merchRes, aboutRes] = await Promise.all([
         getSettings(),
         getMusic(),
         getUpcomingEvents(),
-        getMerch()
+        getMerch(),
+        getAboutSections()
       ])
 
       setSettings(settingsRes.data)
       setFeaturedMusic(musicRes.data.slice(0, 3))
       setUpcomingEvents(eventsRes.data.slice(0, 3))
       setFeaturedMerch(merchRes.data.slice(0, 3))
+      setAboutSections(aboutRes.data || [])
     } catch (error) {
       console.error('Error loading content:', error)
     } finally {
@@ -204,22 +207,13 @@ const Home = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap"
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link to="/music" className="btn-primary inline-flex items-center justify-center gap-2">
               <FaPlay /> Listen Now
             </Link>
-            <Link to="/about" className="btn-outline inline-flex items-center justify-center gap-2">
-              About
-            </Link>
-            <Link to="/tour" className="btn-outline inline-flex items-center justify-center gap-2">
-              <FaTicketAlt /> Tour
-            </Link>
             <Link to="/merch" className="btn-outline inline-flex items-center justify-center gap-2">
               <FaShoppingCart /> Shop Merch
-            </Link>
-            <Link to="/contact" className="btn-secondary inline-flex items-center justify-center gap-2">
-              Contact
             </Link>
             <Link to="/fan-club" className="btn-secondary inline-flex items-center justify-center gap-2">
               <FaHeart /> Join Fan Club
@@ -238,6 +232,86 @@ const Home = () => {
           </div>
         </motion.div>
       </section>
+
+      {/* About Section */}
+      {aboutSections.length > 0 && (
+        <section className="section-padding gradient-bg">
+          <div className="container-custom">
+            <h2 className="text-4xl font-bold mb-12 text-center gradient-text">About</h2>
+            <div className="max-w-4xl mx-auto space-y-8">
+              {aboutSections.map((section, index) => (
+                <motion.div
+                  key={section.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="card p-8"
+                >
+                  <h3 className="text-2xl font-bold mb-4 gradient-text">{section.title}</h3>
+                  <div 
+                    className="text-gray-300 leading-relaxed prose prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: section.content }}
+                  />
+                </motion.div>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link to="/about" className="btn-outline">
+                Read More
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Tour Section */}
+      {upcomingEvents.length > 0 && (
+        <section className="section-padding bg-black">
+          <div className="container-custom">
+            <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Upcoming Tour Dates</h2>
+            <div className="space-y-4 mb-8 max-w-4xl mx-auto">
+              {upcomingEvents.map((event, index) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="card p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                >
+                  <div>
+                    <p className="text-primary font-semibold mb-1">
+                      {new Date(event.eventDate).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                    <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
+                    <p className="text-gray-400">{event.venue} • {event.location}</p>
+                  </div>
+                  {event.ticketUrl && (
+                    <a
+                      href={event.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-primary whitespace-nowrap inline-flex items-center gap-2"
+                    >
+                      <FaTicketAlt /> Get Tickets
+                    </a>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+            <div className="text-center">
+              <Link to="/tour" className="btn-outline">
+                View All Tour Dates
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Music */}
       {featuredMusic.length > 0 && (
@@ -283,53 +357,57 @@ const Home = () => {
         </section>
       )}
 
-      {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
-        <section className="section-padding gradient-bg">
-          <div className="container-custom">
-            <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Upcoming Shows</h2>
-            <div className="space-y-4 mb-8">
-              {upcomingEvents.map((event, index) => (
+      {/* Contact Section */}
+      <section className="section-padding gradient-bg">
+        <div className="container-custom">
+          <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Get In Touch</h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {settings?.contactEmail && (
                 <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, x: -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="card p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                  className="card p-6 text-center"
                 >
-                  <div>
-                    <p className="text-primary font-semibold mb-1">
-                      {new Date(event.eventDate).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                    <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
-                    <p className="text-gray-400">{event.venue} • {event.location}</p>
-                  </div>
-                  {event.ticketUrl && (
-                    <a
-                      href={event.ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary whitespace-nowrap inline-flex items-center gap-2"
-                    >
-                      <FaTicketAlt /> Get Tickets
-                    </a>
-                  )}
+                  <FaEnvelope className="text-4xl text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Email</h3>
+                  <a href={`mailto:${settings.contactEmail}`} className="text-gray-300 hover:text-primary transition-colors">
+                    {settings.contactEmail}
+                  </a>
                 </motion.div>
-              ))}
+              )}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="card p-6 text-center"
+              >
+                <FaPhone className="text-4xl text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Bookings</h3>
+                <p className="text-gray-300">For bookings and inquiries</p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="card p-6 text-center"
+              >
+                <FaMapMarkerAlt className="text-4xl text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Location</h3>
+                <p className="text-gray-300">Available worldwide</p>
+              </motion.div>
             </div>
             <div className="text-center">
-              <Link to="/tour" className="btn-outline">
-                View All Dates
+              <Link to="/contact" className="btn-primary">
+                Send Message
               </Link>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Featured Merch */}
       {featuredMerch.length > 0 && (
