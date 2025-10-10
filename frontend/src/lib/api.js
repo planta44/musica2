@@ -85,6 +85,18 @@ export const login = (email, passcode) => api.post('/auth/login', { email, passc
 
 // Content
 export const getSettings = () => api.get('/content/settings')
+export const updateSettings = (data) => api.put('/content/settings', data)
+export const getAboutSections = () => api.get('/content/about')
+export const createAboutSection = (data) => api.post('/content/about', data)
+export const updateAboutSection = (id, data) => api.put(`/content/about/${id}`, data)
+export const deleteAboutSection = (id) => api.delete(`/content/about/${id}`)
+
+// Music
+export const getMusic = () => api.get('/music')
+export const createMusicItem = (data) => api.post('/music', data)
+export const updateMusicItem = (id, data) => api.put(`/music/${id}`, data)
+export const deleteMusicItem = (id) => api.delete(`/music/${id}`)
+export const purchaseMusic = (id, customerEmail) => api.post(`/music/${id}/purchase`, { customerEmail })
 
 // Purchases
 export const createPurchase = (data) => api.post('/purchases/create', data)
@@ -92,10 +104,6 @@ export const verifyPurchase = (accessToken) => api.get(`/purchases/verify/${acce
 export const checkPurchase = (contentType, contentId, email) => 
   api.get(`/purchases/check?contentType=${contentType}&contentId=${contentId}&email=${email}`)
 export const getMyPurchases = (email) => api.get(`/purchases/my-purchases?email=${email}`)
-export const createMusicItem = (data) => api.post('/music', data)
-export const updateMusicItem = (id, data) => api.put(`/music/${id}`, data)
-export const deleteMusicItem = (id) => api.delete(`/music/${id}`)
-export const purchaseMusic = (id, customerEmail) => api.post(`/music/${id}/purchase`, { customerEmail })
 
 // Videos
 export const getVideos = () => api.get('/videos')
