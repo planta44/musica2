@@ -14,6 +14,8 @@ const AdminVideos = () => {
     thumbnailUrl: '',
     videoUrl: '',
     videoType: 'youtube',
+    price: '',
+    isPurchasable: false,
     displayOrder: 0
   })
 
@@ -45,6 +47,9 @@ const AdminVideos = () => {
       thumbnailUrl: '',
       videoUrl: '',
       videoType: 'youtube',
+      price: '',
+      isPurchasable: false,
+      displayOrder: 0
     })
   }
 
@@ -52,6 +57,7 @@ const AdminVideos = () => {
     try {
       const data = {
         ...formData,
+        price: formData.price ? parseFloat(formData.price) : null,
         displayOrder: parseInt(formData.displayOrder) || 0
       }
 
@@ -157,6 +163,14 @@ const AdminVideos = () => {
               onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) })}
               className="input-field"
             />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Price (if purchasable)"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              className="input-field"
+            />
           </div>
           <textarea
             placeholder="Description"
@@ -165,6 +179,15 @@ const AdminVideos = () => {
             className="input-field mb-4"
             rows="3"
           />
+          <label className="flex items-center gap-2 mb-4">
+            <input
+              type="checkbox"
+              checked={formData.isPurchasable}
+              onChange={(e) => setFormData({ ...formData, isPurchasable: e.target.checked })}
+              className="w-5 h-5"
+            />
+            <span>Purchasable (requires payment to watch)</span>
+          </label>
           <div className="flex gap-2">
             <button onClick={handleSave} className="btn-primary flex items-center gap-2">
               <FaSave /> Save
@@ -185,6 +208,7 @@ const AdminVideos = () => {
             )}
             <h3 className="font-bold text-lg mb-1">{video.title}</h3>
             <p className="text-sm text-gray-400 mb-2">{video.videoType}</p>
+            {video.isPurchasable && <p className="text-primary font-bold mb-2">${video.price}</p>}
             <div className="flex gap-2">
               <button onClick={() => handleEdit(video)} className="btn-secondary flex-1 flex items-center justify-center gap-2">
                 <FaEdit /> Edit

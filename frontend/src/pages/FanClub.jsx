@@ -50,23 +50,12 @@ const FanClub = () => {
     setLoading(true)
 
     try {
-      // First, join the fan club (creates subscriber record)
+      // Join the fan club (creates subscriber record) - now FREE!
       await joinFanClub(email, name)
-      
-      // If fee is 0, no payment needed - just show success
-      if (fee === 0) {
-        toast.success('Welcome to the Fan Club! 🎉')
-        setTimeout(() => {
-          window.location.href = '/'
-        }, 2000)
-        return
-      }
-      
-      // Otherwise, create payment session
-      const { data } = await createFanClubSession(email, name)
-      
-      // Redirect to Stripe checkout
-      window.location.href = data.url
+      toast.success('Welcome to the Fan Club! 🎉')
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 2000)
     } catch (error) {
       console.error('Fan club join error:', error)
       toast.error(error.response?.data?.error || 'Failed to join fan club')
@@ -75,7 +64,7 @@ const FanClub = () => {
     }
   }
 
-  const fee = settings?.fanClubAccessFee || 5
+  const fee = 0 // Fan club is now FREE!
 
   return (
     <div className="min-h-screen pt-20">
@@ -153,15 +142,9 @@ const FanClub = () => {
             <div className="card p-8">
               <div className="text-center mb-8">
                 <h3 className="text-3xl font-bold mb-2 gradient-text">Ready to Join?</h3>
-                {fee === 0 ? (
-                  <p className="text-gray-400">
-                    Join for <span className="text-green-500 font-bold text-2xl">FREE!</span>
-                  </p>
-                ) : (
-                  <p className="text-gray-400">
-                    Access starts at just <span className="text-primary font-bold text-2xl">${fee}</span>
-                  </p>
-                )}
+                <p className="text-gray-400">
+                  Join for <span className="text-green-500 font-bold text-2xl">FREE!</span>
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -215,15 +198,9 @@ const FanClub = () => {
                   disabled={loading}
                   className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Processing...' : showPasswordField ? 'Continue to Admin' : fee === 0 ? 'Join for FREE' : `Join for $${fee}`}
+                  {loading ? 'Processing...' : showPasswordField ? 'Continue to Admin' : 'Join for FREE'}
                 </button>
               </form>
-
-              {fee > 0 && (
-                <p className="text-center text-sm text-gray-500 mt-6">
-                  You'll be redirected to a secure payment page. Cancel anytime.
-                </p>
-              )}
             </div>
           </motion.div>
         </div>
