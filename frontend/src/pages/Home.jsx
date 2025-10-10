@@ -52,44 +52,108 @@ const Home = () => {
       <section className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 z-0">
-          {settings?.heroType === 'both' && settings?.heroMediaUrl ? (
+          {settings?.heroType === 'both' ? (
             <>
-              {/* Background Image */}
-              <img
-                src={getMediaUrl(settings.heroMediaUrl)}
-                alt="Hero Background"
-                className="w-full h-full object-cover"
-              />
-              {/* Video Overlay (if heroMediaUrlMobile is set as video) */}
+              {/* Desktop: Background Image */}
+              {settings?.heroMediaUrl && (
+                <img
+                  src={getMediaUrl(settings.heroMediaUrl)}
+                  alt="Hero Background"
+                  className="hidden md:block w-full h-full object-cover"
+                />
+              )}
+              {/* Mobile: Use mobile URL only if explicitly set, otherwise gradient */}
+              {settings?.heroMediaUrlMobile ? (
+                settings.heroMediaUrlMobile.match(/\.(mp4|webm|mov)$/i) ? (
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="md:hidden w-full h-full object-cover"
+                  >
+                    <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrlMobile)}
+                    alt="Hero Mobile"
+                    className="md:hidden w-full h-full object-cover"
+                  />
+                )
+              ) : (
+                <div className="md:hidden w-full h-full gradient-bg" />
+              )}
+              {/* Video Overlay for desktop (if heroMediaUrlMobile is set as video) */}
               {settings.heroMediaUrlMobile && settings.heroMediaUrlMobile.match(/\.(mp4|webm|mov)$/i) && (
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-50"
+                  className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-50"
                 >
                   <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
                 </video>
               )}
             </>
-          ) : settings?.heroType === 'video' && settings?.heroMediaUrl ? (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            >
-              <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
-            </video>
+          ) : settings?.heroType === 'video' ? (
+            <>
+              {/* Desktop video */}
+              {settings?.heroMediaUrl && (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="hidden md:block w-full h-full object-cover"
+                >
+                  <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
+                </video>
+              )}
+              {/* Mobile: Use mobile URL only if set, otherwise show desktop video */}
+              {settings?.heroMediaUrlMobile ? (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="md:hidden w-full h-full object-cover"
+                >
+                  <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
+                </video>
+              ) : settings?.heroMediaUrl ? (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="md:hidden w-full h-full object-cover"
+                >
+                  <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
+                </video>
+              ) : (
+                <div className="w-full h-full gradient-bg" />
+              )}
+            </>
           ) : settings?.heroMediaUrl ? (
             <>
+              {/* Desktop image */}
               <img
                 src={getMediaUrl(settings.heroMediaUrl)}
                 alt="Hero"
-                className="w-full h-full object-cover"
+                className="hidden md:block w-full h-full object-cover"
               />
+              {/* Mobile: Use mobile URL only if set, otherwise gradient */}
+              {settings?.heroMediaUrlMobile ? (
+                <img
+                  src={getMediaUrl(settings.heroMediaUrlMobile)}
+                  alt="Hero Mobile"
+                  className="md:hidden w-full h-full object-cover"
+                />
+              ) : (
+                <div className="md:hidden w-full h-full gradient-bg" />
+              )}
               <div className="w-full h-full gradient-bg" />
             </>
           ) : (
@@ -140,13 +204,22 @@ const Home = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap"
           >
             <Link to="/music" className="btn-primary inline-flex items-center justify-center gap-2">
               <FaPlay /> Listen Now
             </Link>
+            <Link to="/about" className="btn-outline inline-flex items-center justify-center gap-2">
+              About
+            </Link>
+            <Link to="/tour" className="btn-outline inline-flex items-center justify-center gap-2">
+              <FaTicketAlt /> Tour
+            </Link>
             <Link to="/merch" className="btn-outline inline-flex items-center justify-center gap-2">
               <FaShoppingCart /> Shop Merch
+            </Link>
+            <Link to="/contact" className="btn-secondary inline-flex items-center justify-center gap-2">
+              Contact
             </Link>
             <Link to="/fan-club" className="btn-secondary inline-flex items-center justify-center gap-2">
               <FaHeart /> Join Fan Club
@@ -171,7 +244,7 @@ const Home = () => {
         <section className="section-padding bg-black">
           <div className="container-custom">
             <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Latest Music</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-8">
               {featuredMusic.map((item, index) => (
                 <motion.div
                   key={item.id}
@@ -263,7 +336,7 @@ const Home = () => {
         <section className="section-padding bg-black">
           <div className="container-custom">
             <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Featured Merch</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
               {featuredMerch.map((item, index) => (
                 <motion.div
                   key={item.id}
