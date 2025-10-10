@@ -36,26 +36,8 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      const allowedOrigins = [
-        process.env.FRONTEND_URL,
-        'https://bonke-me.netlify.app',
-        'http://localhost:5173',
-        'http://localhost:3000'
-      ].filter(Boolean);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log('Socket.IO blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST"]
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
   }
 });
 const PORT = process.env.PORT || 3001;
