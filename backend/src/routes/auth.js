@@ -54,31 +54,31 @@ router.post('/magic-link', async (req, res) => {
 router.post('/verify-magic', async (req, res) => {
   try {
     const { token } = req.body;
-
+    
     const admin = await prisma.admin.findFirst({
-      where: {
+      where: { 
         magicToken: token,
         tokenExpiry: { gte: new Date() }
       }
     });
-
+    
     if (!admin) {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
-
+    
     // Clear the magic token
     await prisma.admin.update({
       where: { id: admin.id },
       data: { magicToken: null, tokenExpiry: null }
     });
-
+    
     // Generate JWT
     const jwtToken = jwt.sign(
       { email: admin.email, id: admin.id },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-
+    
     res.json({ token: jwtToken, email: admin.email });
   } catch (error) {
     res.status(500).json({ error: error.message });

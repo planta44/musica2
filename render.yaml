@@ -21,13 +21,3 @@ services:
         value: johnsonmbuguamuhabi@gmail.com
       - key: JWT_SECRET
         value: c75a6b62d207912f813ac27944be56df50deb5156dba1c019dadee806bdb79dc24f452e87ff704a143652ff0e95351b50af94c93f4c0949ee7c2b281e600d1b2
-      - key: FRONTEND_URL
-        value: https://bonke-me.netlify.app/
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        value: johnsonmbuguamuhabi@gmail.com
-      - key: SMTP_PASSWORD
-        value: pfqo ptxr fkab otny
