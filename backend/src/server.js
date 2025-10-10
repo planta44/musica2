@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import prisma from './lib/prisma.js';
 
 // Routes
 import authRoutes from './routes/auth.js';
@@ -112,19 +113,21 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/content', contentRoutes);
 app.use('/api/music', musicRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/merch', merchRoutes);
-  app.use('/api/subscribers', subscriberRoutes);
-  app.use('/api/contact', contactRoutes);
-  app.use('/api/content', contentRoutes);
-  app.use('/api/upload', uploadRoutes);
-  app.use('/api/live', liveRoutes);
+app.use('/api/subscribers', subscriberRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/live', liveRoutes);
 
-  // Enhanced error handler with better logging
-  app.use((err, req, res, next) => {
+// Enhanced error handler with better logging
+app.use((err, req, res, next) => {
     console.error('Server Error:', {
       message: err.message,
       stack: err.stack,

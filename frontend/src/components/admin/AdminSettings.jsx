@@ -38,7 +38,12 @@ const AdminSettings = () => {
     try {
       const { data } = await uploadFile(file)
       handleChange(field, data.url)
-      toast.success('File uploaded successfully')
+      
+      if (data.warning) {
+        toast.warning(data.warning, { duration: 6000 })
+      } else {
+        toast.success('File uploaded successfully')
+      }
     } catch (error) {
       console.error('Upload error:', error)
       toast.error('Failed to upload file')
@@ -138,6 +143,9 @@ const AdminSettings = () => {
                 {settings?.heroType === 'both' && 'Desktop URL = Background Image, Mobile URL = Optional Video Overlay'}
               </p>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm font-semibold mb-2">Hero Opacity (PC)</label>
               <input
@@ -145,7 +153,7 @@ const AdminSettings = () => {
                 step="0.1"
                 min="0"
                 max="1"
-                value={settings?.heroOpacity || 0.6}
+                value={settings?.heroOpacity ?? 0.6}
                 onChange={(e) => handleChange('heroOpacity', parseFloat(e.target.value))}
                 className="input-field"
               />
@@ -157,10 +165,39 @@ const AdminSettings = () => {
                 step="0.1"
                 min="0"
                 max="1"
-                value={settings?.heroOpacityMobile || 0.6}
+                value={settings?.heroOpacityMobile ?? 0.6}
                 onChange={(e) => handleChange('heroOpacityMobile', parseFloat(e.target.value))}
                 className="input-field"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2">Header Opacity (Scrolled)</label>
+              <input
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                value={settings?.headerOpacity ?? 0.95}
+                onChange={(e) => handleChange('headerOpacity', parseFloat(e.target.value))}
+                className="input-field"
+              />
+              <p className="text-xs text-gray-500 mt-2">Navbar background opacity when scrolled down</p>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Header Opacity (Top)</label>
+              <input
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                value={settings?.headerOpacityTop ?? 0.0}
+                onChange={(e) => handleChange('headerOpacityTop', parseFloat(e.target.value))}
+                className="input-field"
+              />
+              <p className="text-xs text-gray-500 mt-2">Navbar background opacity at page top</p>
             </div>
           </div>
 

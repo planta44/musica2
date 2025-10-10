@@ -57,6 +57,7 @@ router.post('/single', authenticateAdmin, upload.single('file'), async (req, res
     }
     
     let fileUrl;
+    let storageWarning = null;
     
     // Check if S3 is properly configured (not placeholder values)
     const hasValidS3Config = 
@@ -71,20 +72,28 @@ router.post('/single', authenticateAdmin, upload.single('file'), async (req, res
         fileUrl = await uploadToS3(req.file.path, req.file.filename);
         // Delete local file after successful upload
         await fs.unlink(req.file.path).catch(err => console.error('Failed to delete local file:', err));
+        console.log(`✅ File uploaded to S3: ${fileUrl}`);
       } catch (s3Error) {
-        console.error('S3 upload failed, using local file:', s3Error.message);
+        console.error('❌ S3 upload failed, using local file:', s3Error.message);
         fileUrl = `/uploads/${req.file.filename}`;
+        storageWarning = 'S3 upload failed - file stored locally (may be lost on Render restart)';
       }
     } else {
       // Use local file URL (S3 not configured)
       fileUrl = `/uploads/${req.file.filename}`;
+      const isRenderEnv = process.env.RENDER || process.env.RENDER_SERVICE_NAME;
+      if (isRenderEnv) {
+        console.warn('⚠️ WARNING: File stored locally on Render - will be lost on restart! Configure S3 to persist files.');
+        storageWarning = 'WARNING: File stored locally on Render. Configure S3 in Settings to persist uploads after restart.';
+      }
     }
     
     res.json({
       url: fileUrl,
       filename: req.file.filename,
       size: req.file.size,
-      mimetype: req.file.mimetype
+      mimetype: req.file.mimetype,
+      warning: storageWarning
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -105,6 +114,9 @@ router.post('/multiple', authenticateAdmin, upload.array('files', 10), async (re
       process.env.S3_ACCESS_KEY_ID && 
       process.env.S3_ACCESS_KEY_ID !== 'your_access_key';
     
+    const isRenderEnv = process.env.RENDER || process.env.RENDER_SERVICE_NAME;
+    let hasLocalStorage = false;
+    
     const uploadPromises = req.files.map(async (file) => {
       let fileUrl;
       
@@ -112,12 +124,15 @@ router.post('/multiple', authenticateAdmin, upload.array('files', 10), async (re
         try {
           fileUrl = await uploadToS3(file.path, file.filename);
           await fs.unlink(file.path).catch(err => console.error('Failed to delete local file:', err));
+          console.log(`✅ File uploaded to S3: ${fileUrl}`);
         } catch (s3Error) {
-          console.error('S3 upload failed for', file.filename, ':', s3Error.message);
+          console.error('❌ S3 upload failed for', file.filename, ':', s3Error.message);
           fileUrl = `/uploads/${file.filename}`;
+          hasLocalStorage = true;
         }
       } else {
         fileUrl = `/uploads/${file.filename}`;
+        hasLocalStorage = true;
       }
       
       return {
@@ -130,7 +145,14 @@ router.post('/multiple', authenticateAdmin, upload.array('files', 10), async (re
     
     const uploads = await Promise.all(uploadPromises);
     
-    res.json({ files: uploads });
+    const response = { files: uploads };
+    
+    if (hasLocalStorage && isRenderEnv) {
+      console.warn('⚠️ WARNING: Files stored locally on Render - will be lost on restart! Configure S3 to persist files.');
+      response.warning = 'WARNING: Files stored locally on Render. Configure S3 to persist uploads after restart.';
+    }
+    
+    res.json(response);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

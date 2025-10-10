@@ -9,6 +9,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [artistName, setArtistName] = useState('Artist')
+  const [headerOpacity, setHeaderOpacity] = useState(0.95)
+  const [headerOpacityTop, setHeaderOpacityTop] = useState(0.0)
   const location = useLocation()
   const { isAdmin } = useStore()
 
@@ -18,6 +20,12 @@ const Navbar = () => {
         const { data } = await getSettings()
         if (data?.artistName) {
           setArtistName(data.artistName)
+        }
+        if (data?.headerOpacity !== undefined) {
+          setHeaderOpacity(data.headerOpacity)
+        }
+        if (data?.headerOpacityTop !== undefined) {
+          setHeaderOpacityTop(data.headerOpacityTop)
         }
       } catch (error) {
         console.error('Failed to load settings:', error)
@@ -56,9 +64,14 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-black/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      style={{
+        backgroundColor: scrolled 
+          ? `rgba(0, 0, 0, ${headerOpacity})` 
+          : `rgba(0, 0, 0, ${headerOpacityTop})`,
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        boxShadow: scrolled ? '0 10px 15px -3px rgba(0, 0, 0, 0.3)' : 'none'
+      }}
     >
       <div className="container-custom px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
