@@ -89,46 +89,31 @@ router.post('/verify-magic', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, passcode } = req.body;
-<<<<<<< HEAD
-    
-    if (email.toLowerCase() !== process.env.ADMIN_EMAIL.toLowerCase()) {
-      return res.status(403).json({ error: 'Unauthorized email' });
-    }
-    
-    const admin = await prisma.admin.findUnique({
-      where: { email: email.toLowerCase() }
-    });
-    
-    if (!admin || !admin.passcode) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-    const isValid = await bcrypt.compare(passcode, admin.passcode);
-    
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-=======
 
     if (email.toLowerCase() !== process.env.ADMIN_EMAIL?.toLowerCase()) {
       return res.status(403).json({ error: 'Unauthorized email' });
     }
 
-    const admin = await prisma.admin.upsert({
-      where: { email: email.toLowerCase() },
-      update: {},
-      create: { email: email.toLowerCase() }
+    const admin = await prisma.admin.findUnique({
+      where: { email: email.toLowerCase() }
     });
 
-    // For now, accept any passcode or no passcode
->>>>>>> 326ec2e5de2ac316412e9ab318aecbc5380aa7a2
+    if (!admin || !admin.passcode) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isValid = await bcrypt.compare(passcode, admin.passcode);
+
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
     const token = jwt.sign(
       { email: admin.email, id: admin.id },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    
+
     res.json({ token, email: admin.email });
   } catch (error) {
     res.status(500).json({ error: error.message });
