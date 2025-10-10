@@ -6,7 +6,10 @@ const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 30000, // 30 second timeout
+  retry: 3, // Number of retries
+  retryDelay: 1000 // Delay between retries
 })
 
 // Request interceptor to add auth token
@@ -23,16 +26,54 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor for error handling
+// Enhanced response interceptor with retry logic
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const { config } = error
+    
+    // Handle authentication errors
     if (error.response?.status === 401) {
       localStorage.removeItem('adminToken')
       if (window.location.pathname.startsWith('/admin')) {
         window.location.href = '/fan-club'
       }
+      return Promise.reject(error)
     }
+    
+    // Retry logic for network errors and 5xx errors
+    if (
+      (!error.response || error.response.status >= 500) &&
+      config &&
+      !config.__isRetryRequest &&
+      config.retry > 0
+    ) {
+      config.__isRetryRequest = true
+      config.retry -= 1
+      
+      console.log(`Retrying request to ${config.url}, attempts left: ${config.retry}`)
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, config.retryDelay))
+      
+      // Exponential backoff
+      config.retryDelay *= 2
+      
+      return api(config)
+    }
+    
+    // Log connection errors for debugging
+    if (!error.response) {
+      console.error('Network Error:', {
+        message: error.message,
+        config: {
+          url: config?.url,
+          method: config?.method,
+          timeout: config?.timeout
+        }
+      })
+    }
+    
     return Promise.reject(error)
   }
 )

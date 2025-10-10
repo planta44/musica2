@@ -42,11 +42,19 @@ const PORT = process.env.PORT || 3001;
 // Make io available to routes
 app.set('io', io);
 
-// Rate limiting
+// Rate limiting with more reasonable limits
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: process.env.NODE_ENV === 'production' ? 200 : 1000, // Higher limits
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip rate limiting for health checks and static files
+  skip: (req) => {
+    return req.path === '/health' || 
+           req.path.startsWith('/uploads') ||
+           req.path.includes('/content/settings')
+  }
 });
 
 // Middleware
@@ -64,22 +72,33 @@ app.use('/api/', limiter);
 // Static uploads folder (for development)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Keep alive endpoint with database check
+// Keep alive endpoint with enhanced database check
 app.get('/health', async (req, res) => {
   try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`
+    // Check database connection with timeout
+    const dbCheck = await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 5000)
+      )
+    ]);
+    
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      database: 'connected'
+      database: 'connected',
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
     })
   } catch (error) {
+    console.error('Health check failed:', error);
     res.status(500).json({ 
       status: 'error', 
       timestamp: new Date().toISOString(),
       database: 'disconnected',
-      error: error.message
+      error: error.message,
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
     })
   }
 })
@@ -105,12 +124,27 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/live', liveRoutes);
 
-// Error handler
+// Enhanced error handler with better logging
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('Server Error:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString(),
+    userAgent: req.get('User-Agent')
+  });
+  
+  // Don't leak error details in production
+  const isDev = process.env.NODE_ENV === 'development';
+  
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    timestamp: new Date().toISOString(),
+    ...(isDev && { 
+      stack: err.stack,
+      details: err 
+    })
   });
 });
 
