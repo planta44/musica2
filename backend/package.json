@@ -5,7 +5,7 @@
   "description": "Backend API for musician website",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node src/server.js",
+    "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",

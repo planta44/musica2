@@ -9,9 +9,6 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Database
-import prisma from './lib/prisma.js';
-
 // Routes
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
@@ -44,21 +41,12 @@ const PORT = process.env.PORT || 3001;
 
 // Make io available to routes
 app.set('io', io);
-app.set('trust proxy', 1); // Trust the first proxy (Render)
 
-// Rate limiting - More permissive for development
+// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 500 : 10000, // Much higher limit for dev
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Skip rate limiting for certain routes
-  skip: (req) => {
-    return req.path.includes('/content/settings') || 
-           req.path.includes('/health') ||
-           req.path.includes('/uploads')
-  }
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
 });
 
 // Middleware
