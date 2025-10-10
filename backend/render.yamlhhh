@@ -23,4 +23,4 @@ databases:
   - name: musician-db
     databaseName: musician_db
     plan: starter
-    region: oregon
+    region: 
