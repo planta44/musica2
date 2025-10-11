@@ -1,131 +1,69 @@
-import { useEffect, useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { useEffect, useRef } from 'react'
+import toast from 'react-hot-toast'
+import { createPurchase } from '../lib/api'
 
-const PayPalButton = ({ amount, contentType, contentId, contentTitle, onSuccess, customerEmail }) => {
-  const [sdkReady, setSdkReady] = useState(false)
-  const [processing, setProcessing] = useState(false)
+const PayPalButton = ({ amount, contentType, contentId, contentTitle, customerEmail, onSuccess }) => {
+  const paypalRef = useRef()
 
   useEffect(() => {
     // Load PayPal SDK
-    const loadPayPalScript = () => {
+    const script = document.createElement('script')
+    script.src = `https://www.paypal.com/sdk/js?client-id=test&currency=USD`
+    script.addEventListener('load', () => {
       if (window.paypal) {
-        setSdkReady(true)
-        return
-      }
-
-      const script = document.createElement('script')
-      script.src = `https://www.paypal.com/sdk/js?client-id=AZxLhMfNQzplIZYxOh8vdgBhvq4jDqDxOe0iYMlH0zJ3gWXY0qUxU6FQ5bN6JZqQgLqHY5TnKqVXH8bJ&currency=USD`
-      script.async = true
-      script.onload = () => setSdkReady(true)
-      script.onerror = () => {
-        toast.error('Failed to load PayPal SDK')
-      }
-      document.body.appendChild(script)
-    }
-
-    loadPayPalScript()
-  }, [])
-
-  useEffect(() => {
-    if (sdkReady && window.paypal && !processing) {
-      // Clear any existing buttons
-      const container = document.getElementById(`paypal-button-container-${contentId}`)
-      if (container) {
-        container.innerHTML = ''
-      }
-
-      try {
         window.paypal.Buttons({
           createOrder: (data, actions) => {
             return actions.order.create({
               purchase_units: [{
-                description: `${contentType === 'music' ? 'Music' : 'Video'}: ${contentTitle}`,
+                description: contentTitle,
                 amount: {
-                  value: amount.toFixed(2)
-                },
-                payee: {
-                  email_address: 'ruachkol@gmail.com'
+                  currency_code: 'USD',
+                  value: amount.toString()
                 }
               }]
             })
           },
           onApprove: async (data, actions) => {
-            setProcessing(true)
             try {
               const order = await actions.order.capture()
               
-              // Create purchase record in our database
-              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/purchases/create`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  contentType,
-                  contentId,
-                  customerEmail: customerEmail || order.payer.email_address,
-                  customerName: `${order.payer.name.given_name} ${order.payer.name.surname}`,
-                  amount: parseFloat(amount),
-                  paymentId: order.id,
-                  paymentMethod: 'paypal'
-                })
+              // Create purchase record
+              const { data: purchase } = await createPurchase({
+                contentType,
+                contentId,
+                customerEmail,
+                amount,
+                paymentMethod: 'paypal',
+                paymentId: order.id,
+                paymentStatus: 'completed'
               })
 
-              const result = await response.json()
-
-              if (result.success) {
-                toast.success('Purchase successful! You now have access to this content.')
-                if (onSuccess) {
-                  onSuccess(result.purchase, result.accessToken)
-                }
-              } else {
-                toast.error('Payment was successful but failed to grant access. Please contact support.')
+              toast.success('Payment successful!')
+              if (onSuccess) {
+                onSuccess(purchase, purchase.accessToken, contentId)
               }
             } catch (error) {
-              console.error('Payment processing error:', error)
-              toast.error('Failed to process payment. Please contact support.')
-            } finally {
-              setProcessing(false)
+              console.error('Payment error:', error)
+              toast.error('Payment processing failed')
             }
           },
           onError: (err) => {
             console.error('PayPal error:', err)
             toast.error('Payment failed. Please try again.')
-            setProcessing(false)
-          },
-          style: {
-            layout: 'vertical',
-            color: 'blue',
-            shape: 'rect',
-            label: 'paypal'
           }
-        }).render(`#paypal-button-container-${contentId}`)
-      } catch (error) {
-        console.error('PayPal button render error:', error)
+        }).render(paypalRef.current)
+      }
+    })
+    document.body.appendChild(script)
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
       }
     }
-  }, [sdkReady, amount, contentType, contentId, contentTitle, onSuccess, customerEmail, processing])
+  }, [amount, contentType, contentId, contentTitle, customerEmail])
 
-  if (!sdkReady) {
-    return (
-      <div className="text-center py-4">
-        <div className="loader mx-auto"></div>
-        <p className="text-gray-400 mt-2">Loading payment options...</p>
-      </div>
-    )
-  }
-
-  return (
-    <div>
-      <div id={`paypal-button-container-${contentId}`} className="mt-4"></div>
-      {processing && (
-        <div className="text-center mt-4">
-          <div className="loader mx-auto"></div>
-          <p className="text-gray-400 mt-2">Processing payment...</p>
-        </div>
-      )}
-    </div>
-  )
+  return <div ref={paypalRef} className="w-full"></div>
 }
 
 export default PayPalButton

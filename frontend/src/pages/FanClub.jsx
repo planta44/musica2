@@ -43,31 +43,6 @@ const FanClub = () => {
   const handleJoin = async (e) => {
     e.preventDefault()
 
-    if (!email || !name) {
-      toast.error('Please fill in all fields')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const { data } = await joinFanClub(email, name)
-      
-      // Show verification sent message
-      setVerificationSent(true)
-      setVerificationEmail(email)
-      toast.success('Verification email sent! Please check your inbox. 📧')
-    } catch (error) {
-      console.error('Fan club join error:', error)
-      toast.error(error.response?.data?.error || 'Failed to sign up')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleLogin = async (e) => {
-    e.preventDefault()
-
     // If admin email, redirect to admin panel
     if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       if (passcode) {
@@ -77,6 +52,31 @@ const FanClub = () => {
       }
       return
     }
+
+    if (!email || !name) {
+      toast.error('Please fill in all fields')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // Join the fan club (creates subscriber record) - now FREE!
+      await joinFanClub(email, name)
+      toast.success('Welcome to the Fan Club! 🎉')
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 2000)
+    } catch (error) {
+      console.error('Fan club join error:', error)
+      toast.error(error.response?.data?.error || 'Failed to join fan club')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
 
     if (!email) {
       toast.error('Please enter your email')

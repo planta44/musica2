@@ -167,7 +167,7 @@ const AudioPlayer = ({ tracks, currentTrackIndex, onTrackChange }) => {
                 max="100"
                 value={duration ? (currentTime / duration) * 100 : 0}
                 onChange={handleSeek}
-                className="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                className="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
               />
               <span className="text-xs text-gray-400 w-12">
                 {formatTime(duration)}
@@ -176,8 +176,11 @@ const AudioPlayer = ({ tracks, currentTrackIndex, onTrackChange }) => {
           </div>
 
           {/* Volume Control */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            <button onClick={toggleMute} className="text-gray-400 hover:text-white transition-colors">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button
+              onClick={toggleMute}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
               {isMuted || volume === 0 ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
             </button>
             <input
@@ -187,30 +190,11 @@ const AudioPlayer = ({ tracks, currentTrackIndex, onTrackChange }) => {
               step="0.01"
               value={isMuted ? 0 : volume}
               onChange={handleVolumeChange}
-              className="w-24 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              className="w-24 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
             />
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: #9333ea;
-          cursor: pointer;
-        }
-        .slider::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: #9333ea;
-          cursor: pointer;
-          border: none;
-        }
-      `}</style>
     </motion.div>
   )
 }
