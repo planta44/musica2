@@ -53,8 +53,20 @@ const FanClub = () => {
       return
     }
 
-    if (!email || !name) {
-      toast.error('Please fill in all fields')
+    // Validate name
+    if (!name || name.trim() === '') {
+      toast.error('Please enter your name')
+      return
+    }
+
+    // Validate email
+    if (!email || email.trim() === '') {
+      toast.error('Please enter your email')
+      return
+    }
+
+    if (!email.includes('@')) {
+      toast.error('Please enter a valid email address')
       return
     }
 

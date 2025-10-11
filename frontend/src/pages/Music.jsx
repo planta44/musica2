@@ -14,6 +14,7 @@ const Music = () => {
   const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail') || '')
   const [purchasedItems, setPurchasedItems] = useState(new Set())
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
+  const [emailInput, setEmailInput] = useState('')
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState(null)
   const { setCurrentTrack } = useStore()
 
@@ -132,25 +133,27 @@ const Music = () => {
             <p className="text-gray-400 mb-6">We'll use this to track your purchases</p>
             <input
               type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
               placeholder="your@email.com"
               className="input-field mb-4"
               onKeyPress={(e) => {
-                if (e.key === 'Enter') handleEmailSubmit(e.target.value)
+                if (e.key === 'Enter') handleEmailSubmit(emailInput)
               }}
               autoFocus
             />
             <div className="flex gap-3">
               <button
-                onClick={(e) => {
-                  const input = e.target.previousElementSibling.previousElementSibling
-                  handleEmailSubmit(input.value)
-                }}
+                onClick={() => handleEmailSubmit(emailInput)}
                 className="btn-primary flex-1"
               >
                 Continue
               </button>
               <button
-                onClick={() => setShowEmailPrompt(false)}
+                onClick={() => {
+                  setShowEmailPrompt(false)
+                  setEmailInput('')
+                }}
                 className="btn-outline flex-1"
               >
                 Cancel
