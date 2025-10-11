@@ -19,7 +19,7 @@ import AdminSubscribers from '../components/admin/AdminSubscribers'
 import AdminContacts from '../components/admin/AdminContacts'
 import AdminLiveEvents from '../components/admin/AdminLiveEvents'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'ruachkol@gmail.com'
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'johnsonmbuguamuhabi@gmail.com'
 
 const AdminLogin = ({ onLogin }) => {
   const [searchParams] = useSearchParams()

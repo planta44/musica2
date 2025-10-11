@@ -6,7 +6,7 @@ import { joinFanClub, loginSubscriber, verifySubscriberEmail, resendVerification
 import { useStore } from '../store/useStore'
 import { useNavigate } from 'react-router-dom'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'ruachkol@gmail.com'
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'johnsonmbuguamuhabi@gmail.com'
 
 const FanClub = () => {
   const [mode, setMode] = useState('join') // 'join' or 'login'
