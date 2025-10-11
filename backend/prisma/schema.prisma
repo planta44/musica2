@@ -146,17 +146,20 @@ model AboutSection {
 }
 
 model Subscriber {
-  id                String            @id @default(uuid())
-  email             String            @unique
-  name              String?
-  isFanClub         Boolean           @default(false)
-  hasAccess         Boolean           @default(false)
-  accessExpiry      DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  payments          Payment[]
-  liveParticipants  LiveParticipant[]
-  liveAccessTokens  LiveAccessToken[]
+  id                   String            @id @default(uuid())
+  email                String            @unique
+  name                 String?
+  isFanClub            Boolean           @default(false)
+  hasAccess            Boolean           @default(false)
+  accessExpiry         DateTime?
+  emailVerified        Boolean           @default(false)
+  verificationToken    String?           @unique
+  verificationExpires  DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  payments             Payment[]
+  liveParticipants     LiveParticipant[]
+  liveAccessTokens     LiveAccessToken[]
 }
 
 model Order {

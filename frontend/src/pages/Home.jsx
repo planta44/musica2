@@ -8,31 +8,29 @@ import { getMediaUrl } from '../lib/utils'
 import ParticleEffect from '../components/ParticleEffect'
 
 const Home = () => {
-  const [settings, setSettings] = useState(null)
-  const [featuredMusic, setFeaturedMusic] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
-  const [featuredMerch, setFeaturedMerch] = useState([])
+  const [musicItems, setMusicItems] = useState([])
+  const [merchItems, setMerchItems] = useState([])
   const [aboutSections, setAboutSections] = useState([])
   const [loading, setLoading] = useState(true)
+  const { settings, contentUpdateTrigger, subscriber } = useStore()
 
   useEffect(() => {
     loadContent()
-  }, [])
+  }, [contentUpdateTrigger])
 
   const loadContent = async () => {
     try {
-      const [settingsRes, musicRes, eventsRes, merchRes, aboutRes] = await Promise.all([
-        getSettings(),
+      const [musicRes, eventsRes, merchRes, aboutRes] = await Promise.all([
         getMusic(),
         getUpcomingEvents(),
         getMerch(),
         getAboutSections()
       ])
 
-      setSettings(settingsRes.data)
-      setFeaturedMusic(musicRes.data.slice(0, 3))
+      setMusicItems(musicRes.data.slice(0, 3))
       setUpcomingEvents(eventsRes.data.slice(0, 3))
-      setFeaturedMerch(merchRes.data.slice(0, 3))
+      setMerchItems(merchRes.data.slice(0, 3))
       setAboutSections(aboutRes.data || [])
     } catch (error) {
       console.error('Error loading content:', error)
@@ -332,12 +330,12 @@ const Home = () => {
       )}
 
       {/* Featured Music */}
-      {featuredMusic.length > 0 && (
+      {musicItems.length > 0 && (
         <section className="section-padding bg-black">
           <div className="container-custom">
             <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Latest Music</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-8">
-              {featuredMusic.map((item, index) => (
+              {musicItems.map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -428,12 +426,12 @@ const Home = () => {
       </section>
 
       {/* Featured Merch */}
-      {featuredMerch.length > 0 && (
+      {merchItems.length > 0 && (
         <section className="section-padding bg-black">
           <div className="container-custom">
             <h2 className="text-4xl font-bold mb-12 text-center gradient-text">Featured Merch</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
-              {featuredMerch.map((item, index) => (
+              {merchItems.map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -483,12 +481,20 @@ const Home = () => {
               Join the Fan Club
             </h2>
             <p className="text-xl text-gray-300 mb-8">
-              Get exclusive access to live streams, behind-the-scenes content, and special perks.
-              Starting at just ${settings?.fanClubAccessFee || 5}/month.
+              Get exclusive access to live streams, behind-the-scenes content, and connect with a community of passionate fans.
             </p>
-            <Link to="/fan-club" className="btn-primary inline-flex items-center gap-2">
-              <FaHeart /> Join Now
-            </Link>
+            {subscriber ? (
+              <div className="inline-flex items-center gap-3 px-8 py-4 bg-primary/20 border-2 border-primary rounded-full">
+                <FaHeart className="text-primary text-2xl" />
+                <span className="text-xl font-semibold">
+                  Welcome back, {subscriber.name}!
+                </span>
+              </div>
+            ) : (
+              <Link to="/fan-club" className="btn-primary inline-flex items-center gap-2">
+                <FaHeart /> Join Now
+              </Link>
+            )}
           </motion.div>
         </div>
       </section>

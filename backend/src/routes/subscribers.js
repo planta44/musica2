@@ -1,6 +1,7 @@
 import express from 'express';
+import crypto from 'crypto';
 import { authenticateAdmin } from '../middleware/auth.js';
-import { sendNewsletter } from '../utils/email.js';
+import { sendNewsletter, sendVerificationEmail } from '../utils/email.js';
 import prisma from '../lib/prisma.js';
 
 const router = express.Router();
@@ -24,22 +25,168 @@ router.post('/subscribe', async (req, res) => {
   }
 });
 
-// Join fan club (subscribe + flag)
+// Join fan club (subscribe + flag) - with email verification
 router.post('/fan-club', async (req, res) => {
   try {
     const { email, name } = req.body;
     
-    const subscriber = await prisma.subscriber.upsert({
-      where: { email: email.toLowerCase() },
-      update: { name, isFanClub: true },
-      create: { 
+    // Check if subscriber already exists
+    const existing = await prisma.subscriber.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    
+    if (existing) {
+      if (existing.emailVerified) {
+        return res.status(400).json({ error: 'Email already registered. Please login instead.' });
+      }
+      // If not verified, resend verification email
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      await prisma.subscriber.update({
+        where: { email: email.toLowerCase() },
+        data: {
+          name,
+          isFanClub: true,
+          verificationToken,
+          verificationExpires
+        }
+      });
+      
+      await sendVerificationEmail(email, name, verificationToken);
+      return res.json({ message: 'Verification email resent! Please check your inbox.' });
+    }
+    
+    // Create new subscriber with verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    const subscriber = await prisma.subscriber.create({
+      data: { 
         email: email.toLowerCase(),
         name,
-        isFanClub: true
+        isFanClub: true,
+        hasAccess: true, // All subscribers have access to fan club content
+        emailVerified: false,
+        verificationToken,
+        verificationExpires
       }
     });
     
-    res.json({ message: 'Welcome to the fan club!', subscriber });
+    // Send verification email
+    await sendVerificationEmail(email, name, verificationToken);
+    
+    res.json({ message: 'Verification email sent! Please check your inbox.', requiresVerification: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Login subscriber
+router.post('/login', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const subscriber = await prisma.subscriber.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    
+    if (!subscriber) {
+      return res.status(404).json({ error: 'Email not found. Please sign up first.' });
+    }
+    
+    if (!subscriber.emailVerified) {
+      return res.json({ 
+        requiresVerification: true, 
+        message: 'Please verify your email first. Check your inbox for the verification link.' 
+      });
+    }
+    
+    // Return subscriber data (remove sensitive fields)
+    const { verificationToken, verificationExpires, ...safeSubscriber } = subscriber;
+    
+    res.json({ 
+      message: 'Login successful!', 
+      subscriber: safeSubscriber 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Verify email
+router.get('/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    const subscriber = await prisma.subscriber.findFirst({
+      where: {
+        verificationToken: token,
+        verificationExpires: {
+          gt: new Date()
+        }
+      }
+    });
+    
+    if (!subscriber) {
+      return res.status(400).json({ error: 'Invalid or expired verification link.' });
+    }
+    
+    // Mark as verified
+    const updated = await prisma.subscriber.update({
+      where: { id: subscriber.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationExpires: null
+      }
+    });
+    
+    // Return subscriber data (remove sensitive fields)
+    const { verificationToken, verificationExpires, ...safeSubscriber } = updated;
+    
+    res.json({ 
+      message: 'Email verified successfully! Welcome to the fan club!', 
+      subscriber: safeSubscriber 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Resend verification email
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const subscriber = await prisma.subscriber.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    
+    if (!subscriber) {
+      return res.status(404).json({ error: 'Email not found.' });
+    }
+    
+    if (subscriber.emailVerified) {
+      return res.status(400).json({ error: 'Email already verified. You can login now.' });
+    }
+    
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    await prisma.subscriber.update({
+      where: { id: subscriber.id },
+      data: {
+        verificationToken,
+        verificationExpires
+      }
+    });
+    
+    // Send verification email
+    await sendVerificationEmail(subscriber.email, subscriber.name, verificationToken);
+    
+    res.json({ message: 'Verification email resent!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

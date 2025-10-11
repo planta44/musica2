@@ -142,3 +142,57 @@ export async function sendLiveEventNotification(email, event) {
     throw error;
   }
 }
+
+export async function sendVerificationEmail(email, name, token) {
+  try {
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+    
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: email,
+      subject: '✨ Verify Your Email - Welcome to the Fan Club!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #000; color: #fff;">
+          <div style="background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%); padding: 30px; text-align: center; border-radius: 10px;">
+            <h1 style="color: #fff; margin: 0; font-size: 28px;">Welcome to the Fan Club! 🎉</h1>
+          </div>
+          
+          <div style="background: #1a1a1a; padding: 30px; margin-top: 20px; border-radius: 10px;">
+            <h2 style="color: #9333ea;">Hi ${name}!</h2>
+            
+            <p style="color: #ccc; line-height: 1.6; font-size: 16px;">
+              Thanks for joining our fan club! We're excited to have you as part of our community.
+            </p>
+            
+            <p style="color: #ccc; line-height: 1.6; font-size: 16px;">
+              To complete your signup and verify your email address, just click the button below:
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%); color: #fff; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Verify My Email →</a>
+            </div>
+            
+            <p style="color: #888; font-size: 14px; margin-top: 30px;">
+              Or copy and paste this link into your browser:<br>
+              <span style="color: #9333ea;">${verifyUrl}</span>
+            </p>
+            
+            <p style="color: #666; font-size: 13px; margin-top: 20px;">
+              This link will expire in 24 hours. If you didn't sign up for our fan club, you can safely ignore this email.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
+            <p>See you on the inside! 🎵</p>
+          </div>
+        </div>
+      `
+    };
+    
+    await getTransporter().sendMail(mailOptions);
+    console.log(`Verification email sent to: ${email}`);
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    throw error;
+  }
+}

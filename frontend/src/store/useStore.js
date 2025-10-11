@@ -11,6 +11,21 @@ export const useStore = create((set, get) => ({
     set({ isAdmin: false, adminEmail: null })
   },
 
+  // Subscriber state
+  subscriber: JSON.parse(localStorage.getItem('subscriber') || 'null'),
+  setSubscriber: (subscriber) => {
+    if (subscriber) {
+      localStorage.setItem('subscriber', JSON.stringify(subscriber))
+    } else {
+      localStorage.removeItem('subscriber')
+    }
+    set({ subscriber })
+  },
+  logoutSubscriber: () => {
+    localStorage.removeItem('subscriber')
+    set({ subscriber: null })
+  },
+
   // Music player state
   currentTrack: null,
   isPlaying: false,

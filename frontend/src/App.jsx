@@ -35,6 +35,7 @@ import FanClub from './pages/FanClub'
 import Contact from './pages/Contact'
 import Admin from './pages/Admin'
 import AuthVerify from './pages/AuthVerify'
+import VerifyEmail from './pages/VerifyEmail'
 import PurchaseSuccess from './pages/PurchaseSuccess'
 import FanClubSuccess from './pages/FanClubSuccess'
 import LiveEvent from './pages/LiveEvent'
@@ -79,6 +80,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/admin/*" element={<Admin />} />
               <Route path="/auth/verify" element={<AuthVerify />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/purchase/success" element={<PurchaseSuccess />} />
               <Route path="/fan-club/success" element={<FanClubSuccess />} />
               <Route path="/live/:id" element={<LiveEvent />} />
