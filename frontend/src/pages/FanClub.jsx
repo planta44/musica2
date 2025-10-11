@@ -17,7 +17,7 @@ const FanClub = () => {
   const [passcode, setPasscode] = useState('')
   const [verificationSent, setVerificationSent] = useState(false)
   const [verificationEmail, setVerificationEmail] = useState('')
-  const { settings, setSubscriber, subscriber } = useStore()
+  const { settings, setSubscriber, subscriber, logoutSubscriber } = useStore()
   const navigate = useNavigate()
 
   const handleEmailChange = (e) => {
@@ -33,12 +33,10 @@ const FanClub = () => {
     }
   }
 
-  useEffect(() => {
-    // Redirect if already logged in
-    if (subscriber) {
-      navigate('/')
-    }
-  }, [subscriber, navigate])
+  const handleLogout = () => {
+    logoutSubscriber()
+    toast.success('Logged out successfully! See you soon! 👋')
+  }
 
   const handleJoin = async (e) => {
     e.preventDefault()
@@ -218,14 +216,65 @@ const FanClub = () => {
             ))}
           </div>
 
-          {/* Signup Form */}
+          {/* Signup Form or Welcome Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="max-w-2xl mx-auto"
           >
-            <div className="card p-8">
+            {subscriber ? (
+              /* Already Logged In - Show Welcome */
+              <div className="card p-8">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FaHeart className="text-4xl text-white" />
+                  </div>
+                  <h3 className="text-3xl font-bold mb-2 gradient-text">Welcome Back, {subscriber.name}! 🎉</h3>
+                  <p className="text-gray-400 mb-2">You're logged in as a Fan Club member</p>
+                  <p className="text-sm text-gray-500 mb-6">{subscriber.email}</p>
+                  
+                  <div className="bg-gray-900/50 rounded-lg p-6 mb-6">
+                    <h4 className="font-semibold mb-3 text-primary">Your Benefits:</h4>
+                    <ul className="text-left space-y-2 text-gray-300">
+                      <li className="flex items-center gap-2">
+                        <FaCheck className="text-green-500" />
+                        Access to exclusive live streams
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <FaCheck className="text-green-500" />
+                        Early access to new releases
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <FaCheck className="text-green-500" />
+                        Behind-the-scenes content
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <FaCheck className="text-green-500" />
+                        Community events and updates
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => navigate('/')}
+                      className="btn-primary flex-1"
+                    >
+                      Explore Content
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="btn-outline flex-1"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Not Logged In - Show Signup Form */
+              <div className="card p-8">
               <div className="text-center mb-8">
                 <h3 className="text-3xl font-bold mb-2 gradient-text">
                   {mode === 'join' ? 'Join the Fan Club' : 'Welcome Back!'}
@@ -347,7 +396,8 @@ const FanClub = () => {
                   </button>
                 </form>
               )}
-            </div>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes, FaMusic } from 'react-icons/fa'
+import { FaBars, FaTimes, FaMusic, FaUser, FaSignOutAlt } from 'react-icons/fa'
 import { useStore } from '../store/useStore'
 import { getSettings } from '../lib/api'
+import toast from 'react-hot-toast'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -12,7 +13,12 @@ const Navbar = () => {
   const [headerOpacity, setHeaderOpacity] = useState(0.95)
   const [headerOpacityTop, setHeaderOpacityTop] = useState(0.0)
   const location = useLocation()
-  const { isAdmin } = useStore()
+  const { isAdmin, subscriber, logoutSubscriber } = useStore()
+
+  const handleLogout = () => {
+    logoutSubscriber()
+    toast.success('Logged out successfully! 👋')
+  }
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -96,6 +102,23 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {/* Subscriber Info (Desktop) */}
+            {subscriber && (
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-700">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 rounded-lg">
+                  <FaUser className="text-primary text-sm" />
+                  <span className="text-sm text-gray-300">{subscriber.name}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                  title="Logout"
+                >
+                  <FaSignOutAlt />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -120,6 +143,28 @@ const Navbar = () => {
             className="lg:hidden bg-black/98 backdrop-blur-md border-t border-gray-800"
           >
             <div className="container-custom px-4 py-4 space-y-2">
+              {/* Subscriber Info (Mobile) */}
+              {subscriber && (
+                <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaUser className="text-primary" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">{subscriber.name}</p>
+                        <p className="text-xs text-gray-400">{subscriber.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
+                    >
+                      <FaSignOutAlt />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
