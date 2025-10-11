@@ -1,43 +1,37 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-let transporter = null;
+let resendClient = null;
 
-function getTransporter() {
-  if (!transporter) {
-    // Check if SMTP is configured
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      console.error('⚠️ SMTP not configured! Email features will not work.');
-      console.error('Required env vars: SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT');
+function getResendClient() {
+  if (!resendClient) {
+    // Check if Resend API key is configured
+    if (!process.env.SMTP_PASSWORD) {
+      console.error('⚠️ Resend API key not configured! Email features will not work.');
+      console.error('Required env var: SMTP_PASSWORD (Resend API key)');
       return null;
     }
 
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD
-      }
-    });
-    
-    console.log('✅ Email transporter configured:', process.env.SMTP_HOST);
+    resendClient = new Resend(process.env.SMTP_PASSWORD);
+    console.log('✅ Resend email client configured');
   }
-  return transporter;
+  return resendClient;
 }
+
+// Default from email
+const FROM_EMAIL = 'onboarding@resend.dev';
 
 export async function sendMagicLink(email, token) {
   try {
-    const transport = getTransporter();
-    if (!transport) {
+    const resend = getResendClient();
+    if (!resend) {
       console.warn('Email not configured - skipping magic link email');
       return;
     }
 
     const magicUrl = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
     
-    const mailOptions = {
-      from: process.env.SMTP_USER,
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: email,
       subject: 'Your Magic Login Link',
       html: `
@@ -51,9 +45,8 @@ export async function sendMagicLink(email, token) {
           <p style="color: #666; font-size: 14px;">If you didn't request this, please ignore this email.</p>
         </div>
       `
-    };
+    });
     
-    await transport.sendMail(mailOptions);
     console.log(`✅ Magic link sent to: ${email}`);
   } catch (error) {
     console.error('❌ Error sending magic link:', error.message);
@@ -63,14 +56,14 @@ export async function sendMagicLink(email, token) {
 
 export async function sendNewsletter(email, subject, message) {
   try {
-    const transport = getTransporter();
-    if (!transport) {
+    const resend = getResendClient();
+    if (!resend) {
       console.warn('Email not configured - skipping newsletter');
       return;
     }
 
-    const mailOptions = {
-      from: process.env.SMTP_USER,
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: email,
       subject: subject,
       html: `
@@ -86,9 +79,8 @@ export async function sendNewsletter(email, subject, message) {
           </div>
         </div>
       `
-    };
+    });
     
-    await transport.sendMail(mailOptions);
     console.log(`✅ Newsletter sent to: ${email}`);
   } catch (error) {
     console.error(`❌ Error sending newsletter to ${email}:`, error.message);
@@ -98,8 +90,14 @@ export async function sendNewsletter(email, subject, message) {
 
 export async function sendContactNotification(data) {
   try {
-    const mailOptions = {
-      from: process.env.SMTP_USER,
+    const resend = getResendClient();
+    if (!resend) {
+      console.warn('Email not configured - skipping contact notification');
+      return;
+    }
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: process.env.ADMIN_EMAIL,
       subject: `New Contact Form: ${data.subject || 'No Subject'}`,
       html: `
@@ -115,19 +113,25 @@ export async function sendContactNotification(data) {
           </div>
         </div>
       `
-    };
+    });
     
-    await getTransporter().sendMail(mailOptions);
+    console.log('✅ Contact notification sent to admin');
   } catch (error) {
-    console.error('Error sending contact notification:', error);
+    console.error('❌ Error sending contact notification:', error.message);
     throw error;
   }
 }
 
 export async function sendLiveEventNotification(email, event) {
   try {
-    const mailOptions = {
-      from: process.env.SMTP_USER,
+    const resend = getResendClient();
+    if (!resend) {
+      console.warn('Email not configured - skipping live event notification');
+      return;
+    }
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: email,
       subject: `🔴 LIVE NOW: ${event.title}`,
       html: `
@@ -156,28 +160,27 @@ export async function sendLiveEventNotification(email, event) {
           </div>
         </div>
       `
-    };
-
-    await getTransporter().sendMail(mailOptions);
-    console.log(`Live event notification sent to: ${email}`);
+    });
+    
+    console.log(`✅ Live event notification sent to: ${email}`);
   } catch (error) {
-    console.error('Error sending live event notification:', error);
+    console.error(`❌ Error sending live event notification to ${email}:`, error.message);
     throw error;
   }
 }
 
 export async function sendVerificationEmail(email, name, token) {
   try {
-    const transport = getTransporter();
-    if (!transport) {
+    const resend = getResendClient();
+    if (!resend) {
       console.warn('Email not configured - skipping verification email');
       return;
     }
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
     
-    const mailOptions = {
-      from: process.env.SMTP_USER,
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: email,
       subject: '✨ Verify Your Email - Welcome to the Fan Club!',
       html: `
@@ -216,9 +219,8 @@ export async function sendVerificationEmail(email, name, token) {
           </div>
         </div>
       `
-    };
+    });
     
-    await transport.sendMail(mailOptions);
     console.log(`✅ Verification email sent to: ${email}`);
   } catch (error) {
     console.error(`❌ Error sending verification email to ${email}:`, error.message);
