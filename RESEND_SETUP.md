@@ -40,16 +40,16 @@
 
 ### **Step 3: Update Local Environment**
 
-**Your local `.env` file is already updated!** Just paste your API key:
+**Your local `.env` file is already updated!** Just verify these settings:
 
 ```env
 SMTP_HOST=smtp.resend.com
 SMTP_PORT=465
-SMTP_USER=resend
-SMTP_PASSWORD=re_paste_your_api_key_here  👈 PASTE HERE
+SMTP_USER=onboarding@resend.dev
+SMTP_PASSWORD=re_TiGUNvfx_8SYBfYQfatnACasDGQtVyKjV
 ```
 
-**Replace `re_paste_your_api_key_here` with your actual API key!**
+✅ **All set!** The `onboarding@resend.dev` email is Resend's verified sender for testing.
 
 ---
 
@@ -63,11 +63,13 @@ SMTP_PASSWORD=re_paste_your_api_key_here  👈 PASTE HERE
 ```
 SMTP_HOST = smtp.resend.com
 SMTP_PORT = 465
-SMTP_USER = resend
+SMTP_USER = onboarding@resend.dev
 SMTP_PASSWORD = re_your_api_key_here
 ```
 
 5. Click **"Save Changes"**
+
+**Note:** Use `onboarding@resend.dev` - this is Resend's default verified sender!
 
 ---
 
@@ -124,7 +126,7 @@ npm run dev
 ```env
 SMTP_HOST=smtp.resend.com
 SMTP_PORT=465
-SMTP_USER=resend
+SMTP_USER=onboarding@resend.dev
 SMTP_PASSWORD=re_123abc456def789ghi
 ```
 
@@ -132,9 +134,11 @@ SMTP_PASSWORD=re_123abc456def789ghi
 ```
 SMTP_HOST = smtp.resend.com
 SMTP_PORT = 465
-SMTP_USER = resend
+SMTP_USER = onboarding@resend.dev
 SMTP_PASSWORD = re_123abc456def789ghi
 ```
+
+**Important:** Use `onboarding@resend.dev` as the SMTP_USER - this is Resend's verified sender address for testing!
 
 ---
 
