@@ -73,18 +73,23 @@ const FanClub = () => {
     setLoading(true)
 
     try {
-      // Join the fan club (creates subscriber record) - now FREE!
+      // Join the fan club (creates subscriber record) - FREE with verification!
       const { data } = await joinFanClub(email, name)
       
-      // Save subscriber to store
-      if (data.subscriber) {
+      // Check if verification is required
+      if (data.requiresVerification) {
+        setVerificationSent(true)
+        setVerificationEmail(email)
+        toast.success('Verification email sent! Please check your inbox. 📧')
+        setLoading(false)
+      } else if (data.subscriber) {
+        // Already verified, log them in
         setSubscriber(data.subscriber)
+        toast.success('Welcome to the Fan Club! 🎉')
+        setTimeout(() => {
+          navigate('/')
+        }, 1500)
       }
-      
-      toast.success('Welcome to the Fan Club! 🎉')
-      setTimeout(() => {
-        navigate('/')
-      }, 1500)
     } catch (error) {
       console.error('Fan club join error:', error)
       toast.error(error.response?.data?.error || 'Failed to join fan club')
@@ -138,20 +143,11 @@ const FanClub = () => {
     setLoading(true)
     try {
       const { data } = await resendVerification(verificationEmail)
-      
-      // Auto-verified now, save subscriber and redirect
-      if (data.subscriber) {
-        setSubscriber(data.subscriber)
-        toast.success('Email verified! Welcome! 🎉')
-        setTimeout(() => {
-          navigate('/')
-        }, 1500)
-      } else {
-        toast.success(data.message || 'Verification successful!')
-      }
+      toast.success('Verification email resent! Please check your inbox. 📧')
     } catch (error) {
       console.error('Resend verification error:', error)
-      toast.error(error.response?.data?.error || 'Failed to verify email')
+      toast.error(error.response?.data?.error || 'Failed to resend verification email')
+    } finally {
       setLoading(false)
     }
   }

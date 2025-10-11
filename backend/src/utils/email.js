@@ -4,6 +4,13 @@ let transporter = null;
 
 function getTransporter() {
   if (!transporter) {
+    // Check if SMTP is configured
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('⚠️ SMTP not configured! Email features will not work.');
+      console.error('Required env vars: SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT');
+      return null;
+    }
+
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -13,12 +20,20 @@ function getTransporter() {
         pass: process.env.SMTP_PASSWORD
       }
     });
+    
+    console.log('✅ Email transporter configured:', process.env.SMTP_HOST);
   }
   return transporter;
 }
 
 export async function sendMagicLink(email, token) {
   try {
+    const transport = getTransporter();
+    if (!transport) {
+      console.warn('Email not configured - skipping magic link email');
+      return;
+    }
+
     const magicUrl = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
     
     const mailOptions = {
@@ -38,15 +53,22 @@ export async function sendMagicLink(email, token) {
       `
     };
     
-    await getTransporter().sendMail(mailOptions);
+    await transport.sendMail(mailOptions);
+    console.log(`✅ Magic link sent to: ${email}`);
   } catch (error) {
-    console.error('Error sending magic link:', error);
+    console.error('❌ Error sending magic link:', error.message);
     throw error;
   }
 }
 
 export async function sendNewsletter(email, subject, message) {
   try {
+    const transport = getTransporter();
+    if (!transport) {
+      console.warn('Email not configured - skipping newsletter');
+      return;
+    }
+
     const mailOptions = {
       from: process.env.SMTP_USER,
       to: email,
@@ -66,9 +88,10 @@ export async function sendNewsletter(email, subject, message) {
       `
     };
     
-    await getTransporter().sendMail(mailOptions);
+    await transport.sendMail(mailOptions);
+    console.log(`✅ Newsletter sent to: ${email}`);
   } catch (error) {
-    console.error('Error sending newsletter:', error);
+    console.error(`❌ Error sending newsletter to ${email}:`, error.message);
     throw error;
   }
 }
@@ -145,6 +168,12 @@ export async function sendLiveEventNotification(email, event) {
 
 export async function sendVerificationEmail(email, name, token) {
   try {
+    const transport = getTransporter();
+    if (!transport) {
+      console.warn('Email not configured - skipping verification email');
+      return;
+    }
+
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
     
     const mailOptions = {
@@ -189,10 +218,10 @@ export async function sendVerificationEmail(email, name, token) {
       `
     };
     
-    await getTransporter().sendMail(mailOptions);
-    console.log(`Verification email sent to: ${email}`);
+    await transport.sendMail(mailOptions);
+    console.log(`✅ Verification email sent to: ${email}`);
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error(`❌ Error sending verification email to ${email}:`, error.message);
     throw error;
   }
 }

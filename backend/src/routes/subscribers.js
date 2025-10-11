@@ -36,39 +36,66 @@ router.post('/fan-club', async (req, res) => {
     });
     
     if (existing) {
-      // Update to fan club member
-      const updated = await prisma.subscriber.update({
+      if (existing.emailVerified) {
+        // Already verified, just update to fan club
+        const updated = await prisma.subscriber.update({
+          where: { email: email.toLowerCase() },
+          data: {
+            name,
+            isFanClub: true,
+            hasAccess: true
+          }
+        });
+        
+        return res.json({ 
+          message: 'Welcome back to the Fan Club!',
+          subscriber: updated
+        });
+      }
+      
+      // Not verified, resend verification email
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      await prisma.subscriber.update({
         where: { email: email.toLowerCase() },
         data: {
           name,
           isFanClub: true,
-          emailVerified: true, // Auto-verify for free fan club
-          hasAccess: true
+          verificationToken,
+          verificationExpires
         }
       });
       
+      await sendVerificationEmail(email, name, verificationToken);
       return res.json({ 
-        message: 'Welcome back to the Fan Club!',
-        subscriber: updated
+        message: 'Verification email sent! Please check your inbox.',
+        requiresVerification: true 
       });
     }
     
-    // Create new subscriber - NO EMAIL VERIFICATION (Free instant access)
+    // Create new subscriber with email verification
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
     const subscriber = await prisma.subscriber.create({
       data: { 
         email: email.toLowerCase(),
         name,
         isFanClub: true,
         hasAccess: true,
-        emailVerified: true, // Auto-verify for free fan club
-        verificationToken: null,
-        verificationExpires: null
+        emailVerified: false, // Require verification
+        verificationToken,
+        verificationExpires
       }
     });
     
+    // Send verification email
+    await sendVerificationEmail(email, name, verificationToken);
+    
     res.json({ 
-      message: 'Welcome to the Fan Club!',
-      subscriber
+      message: 'Verification email sent! Please check your inbox.',
+      requiresVerification: true
     });
   } catch (error) {
     console.error('Fan club join error:', error);
@@ -148,7 +175,7 @@ router.get('/verify/:token', async (req, res) => {
   }
 });
 
-// Resend verification email (now just auto-verifies for free fan club)
+// Resend verification email
 router.post('/resend-verification', async (req, res) => {
   try {
     const { email } = req.body;
@@ -165,23 +192,22 @@ router.post('/resend-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email already verified. You can login now.' });
     }
     
-    // Auto-verify (no email sending for free fan club)
-    const updated = await prisma.subscriber.update({
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    await prisma.subscriber.update({
       where: { id: subscriber.id },
       data: {
-        emailVerified: true,
-        verificationToken: null,
-        verificationExpires: null,
-        hasAccess: true
+        verificationToken,
+        verificationExpires
       }
     });
     
-    const { verificationToken, verificationExpires, ...safeSubscriber } = updated;
+    // Send verification email
+    await sendVerificationEmail(subscriber.email, subscriber.name, verificationToken);
     
-    res.json({ 
-      message: 'Email verified! You can now login.',
-      subscriber: safeSubscriber
-    });
+    res.json({ message: 'Verification email resent! Please check your inbox.' });
   } catch (error) {
     console.error('Resend verification error:', error);
     res.status(500).json({ error: error.message });
@@ -247,30 +273,55 @@ router.post('/broadcast', authenticateAdmin, async (req, res) => {
   try {
     const { subject, message, targetGroup } = req.body; // targetGroup: 'all', 'fanclub'
     
+    if (!subject || !message) {
+      return res.status(400).json({ error: 'Subject and message are required' });
+    }
+    
     let subscribers;
     if (targetGroup === 'fanclub') {
       subscribers = await prisma.subscriber.findMany({
-        where: { isFanClub: true }
+        where: { 
+          isFanClub: true,
+          emailVerified: true // Only send to verified emails
+        }
       });
     } else {
-      subscribers = await prisma.subscriber.findMany();
+      subscribers = await prisma.subscriber.findMany({
+        where: {
+          emailVerified: true // Only send to verified emails
+        }
+      });
     }
     
-    // Send emails (in background)
-    const emailPromises = subscribers.map(sub => 
-      sendNewsletter(sub.email, subject, message)
-    );
+    console.log(`📧 Sending broadcast to ${subscribers.length} subscribers...`);
     
-    // Don't wait for all to complete - return immediately
-    Promise.all(emailPromises).catch(err => {
-      console.error('Error sending newsletter:', err);
-    });
+    // Send emails in batches to avoid overwhelming the server
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const sub of subscribers) {
+      try {
+        await sendNewsletter(sub.email, subject, message);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to send to ${sub.email}:`, error.message);
+        failCount++;
+      }
+      
+      // Small delay between emails to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    console.log(`✅ Broadcast complete: ${successCount} sent, ${failCount} failed`);
     
     res.json({ 
-      message: `Newsletter queued for ${subscribers.length} recipients`,
-      count: subscribers.length 
+      message: `Newsletter sent to ${successCount} recipients`,
+      success: successCount,
+      failed: failCount,
+      total: subscribers.length
     });
   } catch (error) {
+    console.error('Broadcast error:', error);
     res.status(500).json({ error: error.message });
   }
 });
