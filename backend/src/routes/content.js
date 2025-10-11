@@ -27,15 +27,23 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
   try {
     const data = req.body;
     
+    // Ensure boolean fields are properly handled
+    const processedData = {
+      ...data,
+      enableParallax: data.enableParallax === true,
+      enableParticles: data.enableParticles === true,
+      stickyPlayerAutoOpen: data.stickyPlayerAutoOpen === true
+    };
+    
     let existing = await prisma.siteSettings.findFirst();
     let settings;
     
     if (!existing) {
-      settings = await prisma.siteSettings.create({ data });
+      settings = await prisma.siteSettings.create({ data: processedData });
     } else {
       settings = await prisma.siteSettings.update({
         where: { id: existing.id },
-        data: data
+        data: processedData
       });
     }
     

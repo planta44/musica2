@@ -45,7 +45,7 @@ const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
   : null
 
 function App() {
-  const [settings, setSettings] = useState(null)
+  const { setSettings } = useStore()
   
   // Load theme on mount and when settings change
   useTheme()
@@ -54,13 +54,14 @@ function App() {
     const loadSettings = async () => {
       try {
         const { data } = await getSettings()
+        console.log('App loaded settings:', data)
         setSettings(data)
       } catch (error) {
         console.error('Failed to load settings:', error)
       }
     }
     loadSettings()
-  }, [])
+  }, [setSettings])
 
   const content = (
     <Router>

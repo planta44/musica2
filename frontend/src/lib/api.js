@@ -161,7 +161,7 @@ export const getContactSubmissions = () => api.get('/contact')
 export const deleteContactSubmission = (id) => api.delete(`/contact/${id}`)
 
 // Admin
-export const checkAdmin = () => api.get('/auth/check-admin')
+export const checkAdmin = (email) => api.post('/auth/check-admin', { email })
 export const adminLogin = (data) => api.post('/admin/login', data)
 export const adminLogout = () => api.post('/admin/logout')
 export const checkAdminAuth = () => api.get('/admin/check')

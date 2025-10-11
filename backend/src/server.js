@@ -191,8 +191,43 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
+// Initialize admin on startup
+const initializeAdmin = async () => {
+  try {
+    const bcrypt = await import('bcryptjs');
+    const email = process.env.ADMIN_EMAIL;
+    const passcode = process.env.ADMIN_PASSCODE || '2025';
+    
+    const existing = await prisma.admin.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    
+    if (!existing || !existing.passcode) {
+      const hashedPasscode = await bcrypt.default.hash(passcode, 10);
+      
+      await prisma.admin.upsert({
+        where: { email: email.toLowerCase() },
+        update: { passcode: hashedPasscode },
+        create: { 
+          email: email.toLowerCase(),
+          passcode: hashedPasscode
+        }
+      });
+      
+      console.log('✅ Admin account initialized:', email);
+    } else {
+      console.log('✅ Admin account already exists:', email);
+    }
+  } catch (error) {
+    console.error('❌ Failed to initialize admin:', error.message);
+  }
+};
+
+httpServer.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔌 WebSocket server ready`);
+  
+  // Initialize admin account
+  await initializeAdmin();
 });

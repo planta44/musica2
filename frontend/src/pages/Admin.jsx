@@ -28,6 +28,39 @@ const AdminLogin = ({ onLogin }) => {
   const [useMagicLink, setUseMagicLink] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // Auto-login if email and passcode are provided via URL
+  useEffect(() => {
+    const urlEmail = searchParams.get('email')
+    const urlPasscode = searchParams.get('passcode')
+    
+    if (urlEmail && urlPasscode && !loading) {
+      handleAutoLogin(urlEmail, urlPasscode)
+    }
+  }, [])
+
+  const handleAutoLogin = async (emailParam, passcodeParam) => {
+    setLoading(true)
+    try {
+      // Check if admin email
+      const { data: adminCheck } = await checkAdmin(emailParam)
+      if (!adminCheck.isAdmin) {
+        toast.error('Unauthorized email')
+        setLoading(false)
+        return
+      }
+
+      // Login with passcode
+      const { data } = await login(emailParam, passcodeParam)
+      localStorage.setItem('adminToken', data.token)
+      onLogin(emailParam)
+      toast.success('Login successful!')
+    } catch (error) {
+      console.error('Auto-login error:', error)
+      toast.error(error.response?.data?.error || 'Login failed')
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)

@@ -55,7 +55,9 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateSettings(settings)
+      console.log('Saving settings:', settings)
+      const response = await updateSettings(settings)
+      console.log('Settings saved response:', response.data)
       toast.success('Settings saved successfully! ✓ Changes are now live.')
     } catch (error) {
       console.error('Save error:', error)

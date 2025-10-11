@@ -78,6 +78,16 @@ const FanClub = () => {
   const handleLogin = async (e) => {
     e.preventDefault()
 
+    // If admin email, redirect to admin panel
+    if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      if (passcode) {
+        window.location.href = `/admin?email=${encodeURIComponent(email)}&passcode=${encodeURIComponent(passcode)}`
+      } else {
+        window.location.href = `/admin?email=${encodeURIComponent(email)}`
+      }
+      return
+    }
+
     if (!email) {
       toast.error('Please enter your email')
       return

@@ -146,4 +146,41 @@ router.post('/set-passcode', async (req, res) => {
   }
 });
 
+// Initialize admin (for first-time setup) - REMOVE IN PRODUCTION
+router.post('/init-admin', async (req, res) => {
+  try {
+    const email = process.env.ADMIN_EMAIL;
+    const passcode = process.env.ADMIN_PASSCODE || '2025'; // Default passcode
+    
+    // Check if admin already exists
+    const existing = await prisma.admin.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    
+    if (existing && existing.passcode) {
+      return res.json({ message: 'Admin already initialized', email });
+    }
+    
+    const hashedPasscode = await bcrypt.hash(passcode, 10);
+    
+    const admin = await prisma.admin.upsert({
+      where: { email: email.toLowerCase() },
+      update: { passcode: hashedPasscode },
+      create: { 
+        email: email.toLowerCase(),
+        passcode: hashedPasscode
+      }
+    });
+    
+    res.json({ 
+      message: 'Admin initialized successfully',
+      email: admin.email,
+      note: 'You can now login with your passcode'
+    });
+  } catch (error) {
+    console.error('Init admin error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
