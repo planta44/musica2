@@ -32,6 +32,9 @@ const Home = () => {
       setUpcomingEvents(eventsRes.data.slice(0, 3))
       setMerchItems(merchRes.data.slice(0, 3))
       setAboutSections(aboutRes.data || [])
+      
+      // Debug: Check settings
+      console.log('Settings:', settings)
     } catch (error) {
       console.error('Error loading content:', error)
     } finally {
@@ -50,7 +53,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden bg-black">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           {settings?.heroType === 'both' ? (
@@ -155,7 +158,6 @@ const Home = () => {
               ) : (
                 <div className="md:hidden w-full h-full gradient-bg" />
               )}
-              <div className="w-full h-full gradient-bg" />
             </>
           ) : (
             <div className="w-full h-full gradient-bg" />
@@ -163,12 +165,10 @@ const Home = () => {
           <div className="absolute inset-0 bg-black/60" />
         </div>
 
-        {/* Particles effect */}
-        {settings?.enableParticles && (
-          <div className="absolute inset-0 z-10 pointer-events-none">
-            <ParticleEffect />
-          </div>
-        )}
+        {/* Particles effect - Always show */}
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <ParticleEffect />
+        </div>
 
         {/* Content with parallax */}
         <div 
