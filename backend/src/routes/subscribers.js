@@ -36,48 +36,42 @@ router.post('/fan-club', async (req, res) => {
     });
     
     if (existing) {
-      if (existing.emailVerified) {
-        return res.status(400).json({ error: 'Email already registered. Please login instead.' });
-      }
-      // If not verified, resend verification email
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-      
-      await prisma.subscriber.update({
+      // Update to fan club member
+      const updated = await prisma.subscriber.update({
         where: { email: email.toLowerCase() },
         data: {
           name,
           isFanClub: true,
-          verificationToken,
-          verificationExpires
+          emailVerified: true, // Auto-verify for free fan club
+          hasAccess: true
         }
       });
       
-      await sendVerificationEmail(email, name, verificationToken);
-      return res.json({ message: 'Verification email resent! Please check your inbox.' });
+      return res.json({ 
+        message: 'Welcome back to the Fan Club!',
+        subscriber: updated
+      });
     }
     
-    // Create new subscriber with verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    
+    // Create new subscriber - NO EMAIL VERIFICATION (Free instant access)
     const subscriber = await prisma.subscriber.create({
       data: { 
         email: email.toLowerCase(),
         name,
         isFanClub: true,
-        hasAccess: true, // All subscribers have access to fan club content
-        emailVerified: false,
-        verificationToken,
-        verificationExpires
+        hasAccess: true,
+        emailVerified: true, // Auto-verify for free fan club
+        verificationToken: null,
+        verificationExpires: null
       }
     });
     
-    // Send verification email
-    await sendVerificationEmail(email, name, verificationToken);
-    
-    res.json({ message: 'Verification email sent! Please check your inbox.', requiresVerification: true });
+    res.json({ 
+      message: 'Welcome to the Fan Club!',
+      subscriber
+    });
   } catch (error) {
+    console.error('Fan club join error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -154,7 +148,7 @@ router.get('/verify/:token', async (req, res) => {
   }
 });
 
-// Resend verification email
+// Resend verification email (now just auto-verifies for free fan club)
 router.post('/resend-verification', async (req, res) => {
   try {
     const { email } = req.body;
@@ -171,23 +165,25 @@ router.post('/resend-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email already verified. You can login now.' });
     }
     
-    // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    
-    await prisma.subscriber.update({
+    // Auto-verify (no email sending for free fan club)
+    const updated = await prisma.subscriber.update({
       where: { id: subscriber.id },
       data: {
-        verificationToken,
-        verificationExpires
+        emailVerified: true,
+        verificationToken: null,
+        verificationExpires: null,
+        hasAccess: true
       }
     });
     
-    // Send verification email
-    await sendVerificationEmail(subscriber.email, subscriber.name, verificationToken);
+    const { verificationToken, verificationExpires, ...safeSubscriber } = updated;
     
-    res.json({ message: 'Verification email resent!' });
+    res.json({ 
+      message: 'Email verified! You can now login.',
+      subscriber: safeSubscriber
+    });
   } catch (error) {
+    console.error('Resend verification error:', error);
     res.status(500).json({ error: error.message });
   }
 });
