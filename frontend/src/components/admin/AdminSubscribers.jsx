@@ -48,7 +48,7 @@ const AdminSubscribers = () => {
         broadcastData.message,
         broadcastData.targetGroup
       )
-      toast.success(`Newsletter queued for ${data.count} recipients!`)
+      toast.success(`Newsletter sent to ${data.success} recipients!`)
       setShowBroadcast(false)
       setBroadcastData({ subject: '', message: '', targetGroup: 'all' })
     } catch (error) {
