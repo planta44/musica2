@@ -1,0 +1,145 @@
+# Copy this complete code to backend/src/utils/email.js
+
+```javascript
+import * as brevo from '@getbrevo/brevo';
+
+let brevoConfigured = false;
+let apiInstance = null;
+
+function configureBrevo() {
+  if (!brevoConfigured) {
+    if (!process.env.BREVO_API_KEY) {
+      console.error('⚠️ Brevo API key not configured! Email features will not work.');
+      console.error('Required env var: BREVO_API_KEY');
+      return false;
+    }
+
+    apiInstance = new brevo.TransactionalEmailsApi();
+    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+    brevoConfigured = true;
+    console.log('✅ Brevo email service configured');
+  }
+  return true;
+}
+
+function getSender() {
+  return {
+    email: process.env.SENDER_EMAIL || 'noreply@yourdomain.com',
+    name: process.env.SENDER_NAME || 'Musician Website'
+  };
+}
+
+export async function sendMagicLink(email, token) {
+  try {
+    if (!configureBrevo()) return;
+
+    const magicUrl = \`\${process.env.FRONTEND_URL}/auth/verify?token=\${token}\`;
+    
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = getSender();
+    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.subject = 'Your Magic Login Link';
+    sendSmtpEmail.htmlContent = \`<div>Admin login link: <a href="\${magicUrl}">Log In</a></div>\`;
+    
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(\`✅ Magic link sent to: \${email}\`);
+  } catch (error) {
+    console.error('❌ Error sending magic link:', error.message);
+    throw error;
+  }
+}
+
+export async function sendNewsletter(email, subject, message) {
+  try {
+    if (!configureBrevo()) return;
+
+    console.log(\`📧 Attempting to send newsletter to: \${email}\`);
+    
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = getSender();
+    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = \`<div>\${message}</div>\`;
+    
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(\`✅ Newsletter sent successfully to: \${email}\`);
+  } catch (error) {
+    console.error(\`❌ Error sending newsletter to \${email}:\`, error.message);
+    throw error;
+  }
+}
+
+export async function sendContactNotification(data) {
+  try {
+    if (!configureBrevo()) return;
+
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = getSender();
+    sendSmtpEmail.to = [{ email: process.env.ADMIN_EMAIL }];
+    sendSmtpEmail.subject = \`New Contact Form: \${data.subject || 'No Subject'}\`;
+    sendSmtpEmail.htmlContent = \`<div><h2>Contact Form</h2><p>\${data.message}</p></div>\`;
+    
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Contact notification sent to admin');
+  } catch (error) {
+    console.error('❌ Error sending contact notification:', error.message);
+    throw error;
+  }
+}
+
+export async function sendLiveEventNotification(email, event) {
+  try {
+    if (!configureBrevo()) return;
+
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = getSender();
+    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.subject = \`🔴 LIVE NOW: \${event.title}\`;
+    sendSmtpEmail.htmlContent = \`<div>Live event: \${event.title}</div>\`;
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(\`✅ Live event notification sent to: \${email}\`);
+  } catch (error) {
+    console.error(\`❌ Error sending live event notification to \${email}:\`, error.message);
+    throw error;
+  }
+}
+
+export async function sendVerificationEmail(email, name, token) {
+  try {
+    if (!configureBrevo()) {
+      throw new Error('Email service not configured');
+    }
+
+    const verifyUrl = \`\${process.env.FRONTEND_URL}/verify-email?token=\${token}\`;
+    
+    console.log(\`📧 Attempting to send verification email to: \${email}\`);
+    console.log(\`🔗 Verification URL: \${verifyUrl}\`);
+    
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = getSender();
+    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.subject = '✨ Verify Your Email - Welcome to the Fan Club!';
+    sendSmtpEmail.htmlContent = \`
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #000; color: #fff;">
+        <div style="background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%); padding: 30px; text-align: center; border-radius: 10px;">
+          <h1 style="color: #fff; margin: 0; font-size: 28px;">Welcome to the Fan Club! 🎉</h1>
+        </div>
+        <div style="background: #1a1a1a; padding: 30px; margin-top: 20px; border-radius: 10px;">
+          <h2 style="color: #9333ea;">Hi \${name}!</h2>
+          <p style="color: #ccc;">Thanks for joining! Click below to verify your email:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="\${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%); color: #fff; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold;">Verify My Email →</a>
+          </div>
+        </div>
+      </div>
+    \`;
+    
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(\`✅ Verification email sent successfully to: \${email}\`);
+  } catch (error) {
+    console.error(\`❌ Error sending verification email to \${email}:\`, error.message);
+    throw error;
+  }
+}
+```
