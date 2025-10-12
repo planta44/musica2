@@ -67,7 +67,14 @@ router.post('/fan-club', async (req, res) => {
         }
       });
       
-      await sendVerificationEmail(email, name, verificationToken);
+      try {
+        await sendVerificationEmail(email, name, verificationToken);
+        console.log(`✅ Verification email sent successfully to: ${email}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send verification email to ${email}:`, emailError.message);
+        // Continue anyway - user can try resend later
+      }
+      
       return res.json({ 
         message: 'Verification email sent! Please check your inbox.',
         requiresVerification: true 
@@ -91,7 +98,13 @@ router.post('/fan-club', async (req, res) => {
     });
     
     // Send verification email
-    await sendVerificationEmail(email, name, verificationToken);
+    try {
+      await sendVerificationEmail(email, name, verificationToken);
+      console.log(`✅ Verification email sent successfully to: ${email}`);
+    } catch (emailError) {
+      console.error(`❌ Failed to send verification email to ${email}:`, emailError.message);
+      // Continue anyway - user can try resend later
+    }
     
     res.json({ 
       message: 'Verification email sent! Please check your inbox.',
@@ -205,7 +218,13 @@ router.post('/resend-verification', async (req, res) => {
     });
     
     // Send verification email
-    await sendVerificationEmail(subscriber.email, subscriber.name, verificationToken);
+    try {
+      await sendVerificationEmail(subscriber.email, subscriber.name, verificationToken);
+      console.log(`✅ Resend verification email sent successfully to: ${subscriber.email}`);
+    } catch (emailError) {
+      console.error(`❌ Failed to resend verification email to ${subscriber.email}:`, emailError.message);
+      return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+    }
     
     res.json({ message: 'Verification email resent! Please check your inbox.' });
   } catch (error) {
@@ -281,15 +300,13 @@ router.post('/broadcast', authenticateAdmin, async (req, res) => {
     if (targetGroup === 'fanclub') {
       subscribers = await prisma.subscriber.findMany({
         where: { 
-          isFanClub: true,
-          emailVerified: true // Only send to verified emails
+          isFanClub: true
+          // Removed emailVerified requirement - send to all subscribers
         }
       });
     } else {
       subscribers = await prisma.subscriber.findMany({
-        where: {
-          emailVerified: true // Only send to verified emails
-        }
+        // Removed emailVerified requirement - send to all subscribers
       });
     }
     
@@ -301,10 +318,12 @@ router.post('/broadcast', authenticateAdmin, async (req, res) => {
     
     for (const sub of subscribers) {
       try {
+        console.log(`📤 Sending newsletter to: ${sub.email}`);
         await sendNewsletter(sub.email, subject, message);
+        console.log(`✅ Newsletter sent successfully to: ${sub.email}`);
         successCount++;
       } catch (error) {
-        console.error(`Failed to send to ${sub.email}:`, error.message);
+        console.error(`❌ Failed to send newsletter to ${sub.email}:`, error.message);
         failCount++;
       }
       

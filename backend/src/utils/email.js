@@ -58,11 +58,13 @@ export async function sendNewsletter(email, subject, message) {
   try {
     const resend = getResendClient();
     if (!resend) {
-      console.warn('Email not configured - skipping newsletter');
-      return;
+      console.warn('❌ Email not configured - skipping newsletter');
+      throw new Error('Email service not configured');
     }
 
-    await resend.emails.send({
+    console.log(`📧 Attempting to send newsletter to: ${email}`);
+    
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: subject,
@@ -81,9 +83,12 @@ export async function sendNewsletter(email, subject, message) {
       `
     });
     
-    console.log(`✅ Newsletter sent to: ${email}`);
+    console.log(`✅ Newsletter sent successfully to: ${email}`, result);
   } catch (error) {
-    console.error(`❌ Error sending newsletter to ${email}:`, error.message);
+    console.error(`❌ Error sending newsletter to ${email}:`, error);
+    if (error.message) {
+      console.error(`❌ Newsletter error details:`, error.message);
+    }
     throw error;
   }
 }
@@ -173,13 +178,16 @@ export async function sendVerificationEmail(email, name, token) {
   try {
     const resend = getResendClient();
     if (!resend) {
-      console.warn('Email not configured - skipping verification email');
-      return;
+      console.warn('❌ Email not configured - skipping verification email');
+      throw new Error('Email service not configured');
     }
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
     
-    await resend.emails.send({
+    console.log(`📧 Attempting to send verification email to: ${email}`);
+    console.log(`🔗 Verification URL: ${verifyUrl}`);
+    
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: '✨ Verify Your Email - Welcome to the Fan Club!',
@@ -221,9 +229,12 @@ export async function sendVerificationEmail(email, name, token) {
       `
     });
     
-    console.log(`✅ Verification email sent to: ${email}`);
+    console.log(`✅ Verification email sent successfully to: ${email}`, result);
   } catch (error) {
-    console.error(`❌ Error sending verification email to ${email}:`, error.message);
+    console.error(`❌ Error sending verification email to ${email}:`, error);
+    if (error.message) {
+      console.error(`❌ Error details:`, error.message);
+    }
     throw error;
   }
 }
