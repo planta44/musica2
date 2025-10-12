@@ -18,7 +18,9 @@ function getTransporter() {
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
-      }
+      },
+      debug: true, // Enable debug logs
+      logger: true // Enable logger
     });
     
     console.log('✅ Email transporter configured:', process.env.SMTP_HOST);
