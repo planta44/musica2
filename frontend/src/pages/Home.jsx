@@ -32,15 +32,23 @@ const Home = () => {
       setUpcomingEvents(eventsRes.data.slice(0, 3))
       setMerchItems(merchRes.data.slice(0, 3))
       setAboutSections(aboutRes.data || [])
-      
-      // Debug: Check settings
-      console.log('Settings:', settings)
     } catch (error) {
       console.error('Error loading content:', error)
     } finally {
       setLoading(false)
     }
   }
+  
+  // Debug log settings when they change
+  useEffect(() => {
+    if (settings) {
+      console.log('🎬 Hero Settings:', {
+        heroType: settings.heroType,
+        heroMediaUrl: settings.heroMediaUrl,
+        heroOpacity: settings.heroOpacity
+      })
+    }
+  }, [settings])
 
   if (loading) {
     return (
@@ -54,7 +62,7 @@ const Home = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden bg-black">
-        {/* Background */}
+        {/* Background Media Layer */}
         <div className="absolute inset-0 z-0">
           {settings?.heroType === 'both' ? (
             <>
@@ -63,7 +71,7 @@ const Home = () => {
                 <img
                   src={getMediaUrl(settings.heroMediaUrl)}
                   alt="Hero Background"
-                  className="hidden md:block w-full h-full object-cover"
+                  className="hidden md:block absolute inset-0 w-full h-full object-cover"
                 />
               )}
               {/* Mobile: Use mobile URL only if explicitly set, otherwise gradient */}
@@ -162,12 +170,16 @@ const Home = () => {
           ) : (
             <div className="w-full h-full gradient-bg" />
           )}
-          {/* Dynamic overlay opacity */}
-          <div 
-            className="absolute inset-0 bg-black" 
-            style={{ opacity: settings?.heroOpacity ?? 0.6 }}
-          />
         </div>
+
+        {/* Overlay Layer - Separate from background */}
+        <div 
+          className="absolute inset-0 bg-black pointer-events-none" 
+          style={{ 
+            opacity: settings?.heroOpacity ?? 0.6,
+            zIndex: 5
+          }}
+        />
 
         {/* Particles effect - Conditional based on settings */}
         {settings?.enableParticles && (
