@@ -1,11 +1,33 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaPlay, FaPause, FaTimes, FaChevronUp } from 'react-icons/fa'
 import { useStore } from '../store/useStore'
+import { getSettings } from '../lib/api'
 
 const MusicPlayer = () => {
   const { currentTrack, isPlaying, playerOpen, togglePlay, setPlayerOpen } = useStore()
   const audioRef = useRef(null)
+  const [settings, setSettings] = useState(null)
+
+  // Load settings to check auto-open preference
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const { data } = await getSettings()
+        setSettings(data)
+      } catch (error) {
+        console.error('Failed to load settings:', error)
+      }
+    }
+    loadSettings()
+  }, [])
+
+  // Auto-open player if setting is enabled and track changes
+  useEffect(() => {
+    if (currentTrack && settings?.stickyPlayerAutoOpen && !playerOpen) {
+      setPlayerOpen(true)
+    }
+  }, [currentTrack, settings?.stickyPlayerAutoOpen, playerOpen, setPlayerOpen])
 
   useEffect(() => {
     if (audioRef.current) {

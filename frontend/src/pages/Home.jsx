@@ -162,13 +162,19 @@ const Home = () => {
           ) : (
             <div className="w-full h-full gradient-bg" />
           )}
-          <div className="absolute inset-0 bg-black/60" />
+          {/* Dynamic overlay opacity */}
+          <div 
+            className="absolute inset-0 bg-black" 
+            style={{ opacity: settings?.heroOpacity ?? 0.6 }}
+          />
         </div>
 
-        {/* Particles effect - Always show */}
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <ParticleEffect />
-        </div>
+        {/* Particles effect - Conditional based on settings */}
+        {settings?.enableParticles && (
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <ParticleEffect />
+          </div>
+        )}
 
         {/* Content with parallax */}
         <div 
