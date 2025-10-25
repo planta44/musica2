@@ -208,12 +208,26 @@ const AdminGallery = () => {
       <div className="space-y-6">
         {albums.map((album) => (
           <div key={album.id} className="card p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
+            <div className="flex items-start gap-4 mb-4">
+              {/* Cover Image Preview */}
+              {album.coverUrl && (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={album.coverUrl} 
+                    alt={album.name}
+                    className="w-32 h-32 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+              
+              {/* Album Info */}
+              <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-1">{album.name}</h3>
                 {album.description && <p className="text-gray-400">{album.description}</p>}
                 <p className="text-sm text-gray-500 mt-2">{album.photos?.length || 0} photos</p>
               </div>
+              
+              {/* Actions */}
               <div className="flex gap-2">
                 <button onClick={() => handleEdit(album)} className="btn-secondary flex items-center gap-2">
                   <FaEdit /> Edit

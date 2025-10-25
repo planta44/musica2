@@ -140,7 +140,12 @@ const Navbar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden bg-black/98 backdrop-blur-md border-t border-gray-800"
+            className="lg:hidden backdrop-blur-md border-t border-gray-800"
+            style={{
+              backgroundColor: scrolled 
+                ? `rgba(0, 0, 0, ${headerOpacity})` 
+                : `rgba(0, 0, 0, ${headerOpacityTop || 0.95})`
+            }}
           >
             <div className="container-custom px-4 py-4 space-y-2">
               {/* Subscriber Info (Mobile) */}

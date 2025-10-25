@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa'
-import { getEvents, createEvent, updateEvent, deleteEvent } from '../../lib/api'
+import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaImage } from 'react-icons/fa'
+import { getEvents, createEvent, updateEvent, deleteEvent, uploadFile } from '../../lib/api'
 
 const AdminEvents = () => {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     venue: '',
     location: '',
     eventDate: '',
+    thumbnailUrl: '',
     ticketUrl: '',
     displayOrder: 0
   })
@@ -49,16 +51,40 @@ const AdminEvents = () => {
       venue: '',
       location: '',
       eventDate: '',
+      thumbnailUrl: '',
       ticketUrl: '',
       displayOrder: 0
     })
   }
 
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const { data } = await uploadFile(file)
+      setFormData({ ...formData, thumbnailUrl: data.url })
+      toast.success('Thumbnail uploaded!')
+    } catch (error) {
+      toast.error('Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleSave = async () => {
     try {
+      // Only send updatable fields
       const data = {
-        ...formData,
-        eventDate: new Date(formData.eventDate).toISOString()
+        title: formData.title,
+        description: formData.description,
+        venue: formData.venue,
+        location: formData.location,
+        eventDate: new Date(formData.eventDate).toISOString(),
+        thumbnailUrl: formData.thumbnailUrl,
+        ticketUrl: formData.ticketUrl,
+        displayOrder: parseInt(formData.displayOrder)
       }
 
       if (editingId && editingId !== 'new') {
@@ -71,6 +97,7 @@ const AdminEvents = () => {
       handleCancel()
       loadEvents()
     } catch (error) {
+      console.error('Save error:', error)
       toast.error('Failed to save event')
     }
   }
@@ -134,6 +161,31 @@ const AdminEvents = () => {
               onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
               className="input-field"
             />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Thumbnail URL"
+                value={formData.thumbnailUrl}
+                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                className="input-field flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('thumbnail-upload').click()}
+                disabled={uploading}
+                className="btn-secondary whitespace-nowrap flex items-center gap-2"
+              >
+                <FaImage /> {uploading ? 'Uploading...' : 'Upload'}
+              </button>
+              <input
+                id="thumbnail-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </div>
             <input
               type="text"
               placeholder="Ticket URL"

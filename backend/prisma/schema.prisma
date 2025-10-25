@@ -114,6 +114,7 @@ model Event {
   venue        String
   location     String
   eventDate    DateTime
+  thumbnailUrl String?
   ticketUrl    String?
   displayOrder Int      @default(0)
   createdAt    DateTime @default(now())
