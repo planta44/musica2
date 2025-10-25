@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaImages } from 'react-icons/fa'
-import { getAlbums, createAlbum, updateAlbum, deleteAlbum, addPhoto, deletePhoto, uploadFiles } from '../../lib/api'
+import { getAlbums, createAlbum, updateAlbum, deleteAlbum, addPhoto, deletePhoto, uploadFiles, uploadFile } from '../../lib/api'
 
 const AdminGallery = () => {
   const [albums, setAlbums] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState(null)
   const [selectedAlbum, setSelectedAlbum] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -66,6 +67,22 @@ const AdminGallery = () => {
       loadAlbums()
     } catch (error) {
       toast.error('Failed to delete album')
+    }
+  }
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const { data } = await uploadFile(file)
+      setFormData({ ...formData, coverUrl: data.url })
+      toast.success('Cover image uploaded!')
+    } catch (error) {
+      toast.error('Upload failed')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -127,13 +144,31 @@ const AdminGallery = () => {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="input-field"
             />
-            <input
-              type="text"
-              placeholder="Cover Image URL"
-              value={formData.coverUrl}
-              onChange={(e) => setFormData({ ...formData, coverUrl: e.target.value })}
-              className="input-field"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Cover Image URL"
+                value={formData.coverUrl}
+                onChange={(e) => setFormData({ ...formData, coverUrl: e.target.value })}
+                className="input-field flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('cover-upload').click()}
+                disabled={uploading}
+                className="btn-secondary whitespace-nowrap"
+              >
+                {uploading ? 'Uploading...' : 'Upload Cover'}
+              </button>
+              <input
+                id="cover-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </div>
             <input
               type="number"
               placeholder="Display Order"

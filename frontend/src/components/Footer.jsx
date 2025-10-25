@@ -135,7 +135,6 @@ const Footer = () => {
                 <FaTiktok />
               </a>
             </div>
-            <p className="text-xs text-gray-600 mt-2">Set social media URLs in Admin → Settings</p>
           </div>
         </div>
 
