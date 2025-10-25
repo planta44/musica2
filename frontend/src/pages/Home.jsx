@@ -58,6 +58,12 @@ const Home = () => {
     )
   }
 
+  // Helper to detect if URL is video
+  const isVideoUrl = (url) => {
+    if (!url) return false
+    return url.match(/\.(mp4|webm|mov|avi)$/i) !== null
+  }
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -66,13 +72,25 @@ const Home = () => {
         <div className="absolute inset-0 z-0">
           {settings?.heroType === 'both' ? (
             <>
-              {/* Desktop: Background Image */}
+              {/* Desktop: Auto-detect image or video */}
               {settings?.heroMediaUrl && (
-                <img
-                  src={getMediaUrl(settings.heroMediaUrl)}
-                  alt="Hero Background"
-                  className="hidden md:block absolute inset-0 w-full h-full object-cover"
-                />
+                isVideoUrl(settings.heroMediaUrl) ? (
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="hidden md:block absolute inset-0 w-full h-full object-cover"
+                  >
+                    <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrl)}
+                    alt="Hero Background"
+                    className="hidden md:block absolute inset-0 w-full h-full object-cover"
+                  />
+                )
               )}
               {/* Mobile: Use mobile URL only if explicitly set, otherwise gradient */}
               {settings?.heroMediaUrlMobile ? (
@@ -111,39 +129,63 @@ const Home = () => {
             </>
           ) : settings?.heroType === 'video' ? (
             <>
-              {/* Desktop video */}
+              {/* Desktop: Auto-detect video or image */}
               {settings?.heroMediaUrl && (
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="hidden md:block w-full h-full object-cover"
-                >
-                  <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
-                </video>
+                isVideoUrl(settings.heroMediaUrl) ? (
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="hidden md:block w-full h-full object-cover"
+                  >
+                    <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrl)}
+                    alt="Hero"
+                    className="hidden md:block w-full h-full object-cover"
+                  />
+                )
               )}
-              {/* Mobile: Use mobile URL only if set, otherwise show desktop video */}
+              {/* Mobile: Auto-detect media type */}
               {settings?.heroMediaUrlMobile ? (
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="md:hidden w-full h-full object-cover"
-                >
-                  <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
-                </video>
+                isVideoUrl(settings.heroMediaUrlMobile) ? (
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="md:hidden w-full h-full object-cover"
+                  >
+                    <source src={getMediaUrl(settings.heroMediaUrlMobile)} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrlMobile)}
+                    alt="Hero Mobile"
+                    className="md:hidden w-full h-full object-cover"
+                  />
+                )
               ) : settings?.heroMediaUrl ? (
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="md:hidden w-full h-full object-cover"
-                >
-                  <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
-                </video>
+                isVideoUrl(settings.heroMediaUrl) ? (
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="md:hidden w-full h-full object-cover"
+                  >
+                    <source src={getMediaUrl(settings.heroMediaUrl)} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    src={getMediaUrl(settings.heroMediaUrl)}
+                    alt="Hero"
+                    className="md:hidden w-full h-full object-cover"
+                  />
+                )
               ) : (
                 <div className="w-full h-full gradient-bg" />
               )}

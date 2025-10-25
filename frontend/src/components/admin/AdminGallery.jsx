@@ -44,16 +44,25 @@ const AdminGallery = () => {
 
   const handleSave = async () => {
     try {
+      // Only send updatable fields (exclude id, createdAt, updatedAt, photos)
+      const updateData = {
+        name: formData.name,
+        description: formData.description,
+        coverUrl: formData.coverUrl,
+        displayOrder: parseInt(formData.displayOrder)
+      }
+
       if (editingId && editingId !== 'new') {
-        await updateAlbum(editingId, formData)
+        await updateAlbum(editingId, updateData)
         toast.success('Album updated! ✓')
       } else {
-        await createAlbum(formData)
+        await createAlbum(updateData)
         toast.success('Album created! ✓')
       }
       handleCancel()
       loadAlbums()
     } catch (error) {
+      console.error('Save error:', error)
       toast.error('Failed to save album')
     }
   }
