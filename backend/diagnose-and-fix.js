@@ -14,7 +14,7 @@ async function diagnose() {
     await prisma.$connect();
     console.log('   ✅ Database connected successfully\n');
 
-    // 2. Check if tables exist by trying to count records
+    // 2. Chec tables exist by trying to count records
     console.log('2. Checking database tables...');
     
     const tables = {
