@@ -19,6 +19,7 @@ model SiteSettings {
   heroSubtitle          String?
   headerOpacity         Float    @default(0.95) // Navbar opacity when scrolled
   headerOpacityTop      Float    @default(0.0) // Navbar opacity at top of page
+  mobileMenuOpacity     Float    @default(0.2) // Mobile hamburger menu dropdown opacity
   primaryColor          String   @default("#9333ea") // neon purple
   secondaryColor        String   @default("#000000") // black
   accentColor           String   @default("#a855f7")

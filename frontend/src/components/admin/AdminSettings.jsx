@@ -201,6 +201,19 @@ const AdminSettings = () => {
               />
               <p className="text-xs text-gray-500 mt-2">Navbar background opacity at page top</p>
             </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Mobile Menu Opacity</label>
+              <input
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                value={settings?.mobileMenuOpacity ?? 0.2}
+                onChange={(e) => handleChange('mobileMenuOpacity', parseFloat(e.target.value))}
+                className="input-field"
+              />
+              <p className="text-xs text-gray-500 mt-2">Mobile hamburger dropdown background opacity (0.2 = very transparent)</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">

@@ -12,6 +12,7 @@ const Navbar = () => {
   const [artistName, setArtistName] = useState('Artist')
   const [headerOpacity, setHeaderOpacity] = useState(0.95)
   const [headerOpacityTop, setHeaderOpacityTop] = useState(0.0)
+  const [mobileMenuOpacity, setMobileMenuOpacity] = useState(0.2)
   const location = useLocation()
   const { isAdmin, subscriber, logoutSubscriber } = useStore()
 
@@ -32,6 +33,9 @@ const Navbar = () => {
         }
         if (data?.headerOpacityTop !== undefined) {
           setHeaderOpacityTop(data.headerOpacityTop)
+        }
+        if (data?.mobileMenuOpacity !== undefined) {
+          setMobileMenuOpacity(data.mobileMenuOpacity)
         }
       } catch (error) {
         console.error('Failed to load settings:', error)
@@ -142,9 +146,7 @@ const Navbar = () => {
             transition={{ duration: 0.3 }}
             className="lg:hidden backdrop-blur-md border-t border-gray-800"
             style={{
-              backgroundColor: scrolled 
-                ? `rgba(0, 0, 0, ${headerOpacity})` 
-                : `rgba(0, 0, 0, ${headerOpacityTop || 0.95})`
+              backgroundColor: `rgba(0, 0, 0, ${mobileMenuOpacity})`
             }}
           >
             <div className="container-custom px-4 py-4 space-y-2">
