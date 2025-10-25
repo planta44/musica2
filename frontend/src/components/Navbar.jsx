@@ -144,9 +144,13 @@ const Navbar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden backdrop-blur-md border-t border-gray-800"
+            className="lg:hidden border-t border-gray-800"
             style={{
-              backgroundColor: `rgba(0, 0, 0, ${mobileMenuOpacity})`
+              backgroundColor: `rgba(0, 0, 0, ${mobileMenuOpacity})`,
+              backdropFilter: 'blur(12px)', // Consistent blur regardless of scroll
+              WebkitBackdropFilter: 'blur(12px)', // Safari support
+              transition: 'none', // Prevent any CSS transitions from parent
+              willChange: 'height' // Only animate height, not background
             }}
           >
             <div className="container-custom px-4 py-4 space-y-2">
