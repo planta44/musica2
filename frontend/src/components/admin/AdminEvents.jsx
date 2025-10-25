@@ -208,6 +208,19 @@ const AdminEvents = () => {
             className="input-field mb-4"
             rows="3"
           />
+          
+          {/* Thumbnail Preview */}
+          {formData.thumbnailUrl && (
+            <div className="mb-4">
+              <label className="block text-sm font-semibold mb-2">Current Thumbnail</label>
+              <img 
+                src={formData.thumbnailUrl} 
+                alt="Thumbnail preview"
+                className="w-48 h-48 object-cover rounded-lg"
+              />
+            </div>
+          )}
+          
           <div className="flex gap-2">
             <button onClick={handleSave} className="btn-primary flex items-center gap-2">
               <FaSave /> Save
@@ -223,7 +236,18 @@ const AdminEvents = () => {
       <div className="space-y-4">
         {events.map((event) => (
           <div key={event.id} className="card p-6">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              {/* Thumbnail Preview */}
+              {event.thumbnailUrl && (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={event.thumbnailUrl} 
+                    alt={event.title}
+                    className="w-32 h-32 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+              
               <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
                 <div className="space-y-1 text-gray-400">
@@ -234,12 +258,14 @@ const AdminEvents = () => {
                   {event.description && <p className="mt-2">{event.description}</p>}
                 </div>
               </div>
-              <div className="flex gap-2 ml-4">
+              
+              {/* Actions */}
+              <div className="flex flex-col gap-2">
                 <button onClick={() => handleEdit(event)} className="btn-secondary flex items-center gap-2">
                   <FaEdit /> Edit
                 </button>
-                <button onClick={() => handleDelete(event.id)} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-                  <FaTrash />
+                <button onClick={() => handleDelete(event.id)} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center justify-center gap-2">
+                  <FaTrash /> Delete
                 </button>
               </div>
             </div>

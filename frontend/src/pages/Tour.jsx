@@ -81,6 +81,17 @@ const Tour = () => {
                 >
                   <div className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      {/* Thumbnail Image */}
+                      {event.thumbnailUrl && (
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={event.thumbnailUrl} 
+                            alt={event.title}
+                            className="w-full md:w-48 h-48 object-cover rounded-lg"
+                          />
+                        </div>
+                      )}
+                      
                       {/* Event Info */}
                       <div className="flex-1">
                         <div className="flex items-start gap-4">
@@ -147,9 +158,18 @@ const Tour = () => {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-gray-800/50 rounded-lg p-4 flex items-center justify-between gap-4"
+                  className="bg-gray-800/50 rounded-lg p-4 flex items-center gap-4"
                 >
-                  <div className="flex items-center gap-4">
+                  {/* Thumbnail */}
+                  {event.thumbnailUrl && (
+                    <img 
+                      src={event.thumbnailUrl} 
+                      alt={event.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  )}
+                  
+                  <div className="flex-1 flex items-center gap-4">
                     <div className="text-gray-500 min-w-[100px]">
                       {format(new Date(event.eventDate), 'MMM dd, yyyy')}
                     </div>

@@ -85,11 +85,14 @@ const AdminGallery = () => {
 
     setUploading(true)
     try {
+      console.log('🖼️ Uploading cover:', file.name)
       const { data } = await uploadFile(file)
+      console.log('✅ Cover uploaded:', data.url)
       setFormData({ ...formData, coverUrl: data.url })
-      toast.success('Cover image uploaded!')
+      toast.success('Cover image uploaded! Click Save to apply.')
     } catch (error) {
-      toast.error('Upload failed')
+      console.error('❌ Cover upload error:', error)
+      toast.error(error.response?.data?.error || 'Upload failed - check Cloudinary credentials')
     } finally {
       setUploading(false)
     }
@@ -99,18 +102,24 @@ const AdminGallery = () => {
     const files = Array.from(e.target.files)
     if (!files.length) return
 
+    setUploading(true)
     try {
+      console.log('📸 Uploading photos:', files.length)
       const { data } = await uploadFiles(files)
+      console.log('✅ Upload response:', data)
       
       // Add each uploaded photo to the album
       for (const file of data.files) {
         await addPhoto(albumId, { url: file.url, caption: '', displayOrder: 0 })
       }
       
-      toast.success(`${files.length} photo(s) uploaded`)
+      toast.success(`${files.length} photo(s) uploaded!`)
       loadAlbums()
     } catch (error) {
-      toast.error('Upload failed')
+      console.error('❌ Photo upload error:', error)
+      toast.error(error.response?.data?.error || 'Upload failed - check Cloudinary credentials')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -193,6 +202,20 @@ const AdminGallery = () => {
             className="input-field mb-4"
             rows="3"
           />
+          
+          {/* Cover Image Preview */}
+          {formData.coverUrl && (
+            <div className="mb-4">
+              <label className="block text-sm font-semibold mb-2">Cover Preview</label>
+              <img 
+                src={formData.coverUrl} 
+                alt="Cover preview"
+                className="w-48 h-48 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-2">This will be saved when you click Save Album</p>
+            </div>
+          )}
+          
           <div className="flex gap-2">
             <button onClick={handleSave} className="btn-primary flex items-center gap-2">
               <FaSave /> Save
