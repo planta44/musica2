@@ -39,7 +39,6 @@ import AuthVerify from './pages/AuthVerify'
 import VerifyEmail from './pages/VerifyEmail'
 import PurchaseSuccess from './pages/PurchaseSuccess'
 import FanClubSuccess from './pages/FanClubSuccess'
-import LiveEvent from './pages/LiveEvent'
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY 
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -86,7 +85,6 @@ function App() {
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/purchase/success" element={<PurchaseSuccess />} />
               <Route path="/fan-club/success" element={<FanClubSuccess />} />
-              <Route path="/live/:id" element={<LiveEvent />} />
             </Routes>
           </main>
           <Footer />
