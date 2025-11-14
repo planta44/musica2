@@ -168,6 +168,7 @@ model Subscriber {
   id                   String            @id @default(uuid())
   email                String            @unique
   name                 String?
+  isActive             Boolean           @default(true)
   isFanClub            Boolean           @default(false)
   hasAccess            Boolean           @default(false)
   accessExpiry         DateTime?
