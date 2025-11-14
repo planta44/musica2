@@ -3,39 +3,15 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaPlay, FaStop, FaImage, FaBell, FaExternalLinkAlt } from 'react-icons/fa'
 import { format } from 'date-fns'
-
-// API functions for live events
-const api = {
-  get: (url) => fetch(`/api${url}`).then(res => res.json()),
-  post: (url, data) => fetch(`/api${url}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  }).then(res => res.json()),
-  put: (url, data) => fetch(`/api${url}`, {
-    method: 'PUT', 
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  }).then(res => res.json()),
-  delete: (url) => fetch(`/api${url}`, { method: 'DELETE' }).then(res => res.json())
-}
-
-const getLiveEvents = () => api.get('/live')
-const createLiveEvent = (data) => api.post('/live', data)
-const updateLiveEvent = (id, data) => api.put(`/live/${id}`, data)
-const deleteLiveEvent = (id) => api.delete(`/live/${id}`)
-const activateLiveEvent = (id) => api.post(`/live/${id}/activate`, {})
-const deactivateLiveEvent = (id) => api.post(`/live/${id}/deactivate`, {})
-
-// Upload function
-const uploadFile = (file) => {
-  const formData = new FormData()
-  formData.append('file', file)
-  return fetch('/api/upload/single', {
-    method: 'POST',
-    body: formData
-  }).then(res => res.json())
-}
+import { 
+  getLiveEvents, 
+  createLiveEvent, 
+  updateLiveEvent, 
+  deleteLiveEvent, 
+  activateLiveEvent, 
+  deactivateLiveEvent,
+  uploadFile 
+} from '../../lib/api'
 
 const AdminLiveEvents = () => {
   const [events, setEvents] = useState([])
@@ -60,10 +36,14 @@ const AdminLiveEvents = () => {
 
   const loadEvents = async () => {
     try {
+      console.log('Loading live events...')
       const data = await getLiveEvents()
-      setEvents(data)
+      console.log('Live events loaded:', data)
+      setEvents(Array.isArray(data) ? data : [])
     } catch (error) {
-      toast.error('Failed to load live events')
+      console.error('Failed to load live events:', error)
+      toast.error(`Failed to load live events: ${error.message || 'Unknown error'}`)
+      setEvents([])
     } finally {
       setLoading(false)
     }

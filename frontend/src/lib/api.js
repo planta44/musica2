@@ -1,6 +1,30 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+// Auto-detect API URL based on environment
+const getApiBaseUrl = () => {
+  // If explicitly set via environment variable, use it
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL
+  }
+  
+  // In production, use the current domain (for same-domain deployments)
+  if (import.meta.env.PROD) {
+    return window.location.origin
+  }
+  
+  // Development fallback
+  return 'http://localhost:3001'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
+// Debug logging
+console.log('🔗 API Configuration:', {
+  baseUrl: API_BASE_URL,
+  fullApiUrl: `${API_BASE_URL}/api`,
+  environment: import.meta.env.MODE,
+  isProduction: import.meta.env.PROD
+})
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -186,18 +210,13 @@ export const uploadFiles = (files) => {
 }
 
 // Live Events
-export const getLiveEvents = () => api.get('/live')
-export const getUpcomingLiveEvents = () => api.get('/live/upcoming')
-export const getLiveEvent = (id) => api.get(`/live/${id}`)
-export const createLiveEvent = (data) => api.post('/live', data)
-export const updateLiveEvent = (id, data) => api.put(`/live/${id}`, data)
-export const deleteLiveEvent = (id) => api.delete(`/live/${id}`)
-export const startLiveEvent = (id) => api.post(`/live/${id}/start`)
-export const endLiveEvent = (id) => api.post(`/live/${id}/end`)
-export const requestLiveAccess = (id, data) => api.post(`/live/${id}/access`, data)
-export const verifyLiveAccess = (id, token) => api.post(`/live/${id}/verify-access`, { token })
-export const joinLiveEvent = (id, data) => api.post(`/live/${id}/join`, data)
-export const updateParticipant = (id, data) => api.put(`/live/${id}/participant`, data)
-export const leaveLiveEvent = (id, subscriberId) => api.post(`/live/${id}/leave`, { subscriberId })
+export const getLiveEvents = () => api.get('/live').then(response => response.data)
+export const getUpcomingLiveEvents = () => api.get('/live/upcoming').then(response => response.data)
+export const getActiveLiveEvents = () => api.get('/live/active').then(response => response.data)
+export const createLiveEvent = (data) => api.post('/live', data).then(response => response.data)
+export const updateLiveEvent = (id, data) => api.put(`/live/${id}`, data).then(response => response.data)
+export const deleteLiveEvent = (id) => api.delete(`/live/${id}`).then(response => response.data)
+export const activateLiveEvent = (id) => api.post(`/live/${id}/activate`).then(response => response.data)
+export const deactivateLiveEvent = (id) => api.post(`/live/${id}/deactivate`).then(response => response.data)
 
 export default api

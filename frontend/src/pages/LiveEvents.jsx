@@ -4,14 +4,7 @@ import { FaCalendar, FaExternalLinkAlt, FaDonate, FaHeart } from 'react-icons/fa
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 
-// API functions
-const api = {
-  get: (url) => fetch(`/api${url}`).then(res => res.json())
-}
-
-const getLiveEvents = () => api.get('/live')
-const getActiveLiveEvents = () => api.get('/live/active')
-const getUpcomingLiveEvents = () => api.get('/live/upcoming')
+import { getLiveEvents, getActiveLiveEvents, getUpcomingLiveEvents } from '../lib/api'
 
 const LiveEvents = () => {
   const [activeEvents, setActiveEvents] = useState([])
@@ -24,16 +17,28 @@ const LiveEvents = () => {
 
   const loadEvents = async () => {
     try {
+      console.log('Loading live events for public page...')
       const [activeRes, upcomingRes] = await Promise.all([
-        getActiveLiveEvents(),
-        getUpcomingLiveEvents()
+        getActiveLiveEvents().catch(err => {
+          console.error('Failed to load active events:', err)
+          return []
+        }),
+        getUpcomingLiveEvents().catch(err => {
+          console.error('Failed to load upcoming events:', err)
+          return []
+        })
       ])
       
-      setActiveEvents(activeRes)
-      setUpcomingEvents(upcomingRes)
+      console.log('Active events:', activeRes)
+      console.log('Upcoming events:', upcomingRes)
+      
+      setActiveEvents(Array.isArray(activeRes) ? activeRes : [])
+      setUpcomingEvents(Array.isArray(upcomingRes) ? upcomingRes : [])
     } catch (error) {
       console.error('Error loading live events:', error)
-      toast.error('Failed to load live events')
+      toast.error(`Failed to load live events: ${error.message || 'Unknown error'}`)
+      setActiveEvents([])
+      setUpcomingEvents([])
     } finally {
       setLoading(false)
     }
