@@ -29,6 +29,7 @@ import Music from './pages/Music'
 import Videos from './pages/Videos'
 import About from './pages/About'
 import Tour from './pages/Tour'
+import LiveEvents from './pages/LiveEvents'
 import Merch from './pages/Merch'
 import Support from './pages/Support'
 import FanClub from './pages/FanClub'
@@ -75,6 +76,7 @@ function App() {
               <Route path="/videos" element={<Videos />} />
               <Route path="/about" element={<About />} />
               <Route path="/tour" element={<Tour />} />
+              <Route path="/live-events" element={<LiveEvents />} />
               <Route path="/merch" element={<Merch />} />
               <Route path="/support" element={<Support />} />
               <Route path="/fan-club" element={<FanClub />} />

@@ -122,6 +122,23 @@ model Event {
   updatedAt    DateTime @updatedAt
 }
 
+model LiveEvent {
+  id                String   @id @default(uuid())
+  title             String
+  description       String?
+  streamUrl         String   // YouTube, FB, Meet, etc. link
+  scheduledDate     DateTime
+  thumbnailUrl      String?
+  isActive          Boolean  @default(false)
+  notificationsSent Boolean  @default(false)
+  platform          String   @default("youtube") // youtube, facebook, meet, twitch, etc.
+  supportPaypalUrl  String?  // PayPal donation link
+  supportStripeUrl  String?  // Stripe donation link
+  displayOrder      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
 model MerchItem {
   id           String   @id @default(uuid())
   name         String

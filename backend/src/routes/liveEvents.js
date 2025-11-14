@@ -1,15 +1,17 @@
-import express from 'express';
-import { authenticateAdmin } from '../middleware/auth.js';
-import prisma from '../lib/prisma.js';
-import nodemailer from 'nodemailer';
+const express = require('express')
+const router = express.Router()
+const { PrismaClient } = require('@prisma/client')
+const { authenticateAdmin } = require('../middleware/auth')
+const { broadcastContentUpdate } = require('../utils/websocket')
+const nodemailer = require('nodemailer')
 
-const router = express.Router();
+const prisma = new PrismaClient()
 
 // Email configuration
 const createEmailTransporter = () => {
   if (process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     return nodemailer.createTransporter({
-      service: process.env.EMAIL_SERVICE,
+      service: process.env.EMAIL_SERVICE, // 'gmail', 'outlook', etc.
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -33,15 +35,15 @@ const getEmbedUrl = (url, platform) => {
       } else if (url.includes('youtu.be/')) {
         videoId = url.split('youtu.be/')[1]?.split('?')[0]
       } else if (url.includes('youtube.com/embed/')) {
-        return url
+        return url // Already embed format
       }
       
-      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0` : null
+      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1` : null
     }
 
     // Facebook
     if (platform === 'facebook' || url.includes('facebook.com')) {
-      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=false`
+      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`
     }
 
     // Twitch
@@ -67,6 +69,7 @@ const sendLiveEventNotifications = async (liveEvent) => {
   }
 
   try {
+    // Get all subscribers
     const subscribers = await prisma.subscriber.findMany({
       where: { isActive: true }
     })
@@ -110,7 +113,8 @@ const sendLiveEventNotifications = async (liveEvent) => {
             <hr style="border: 1px solid #333; margin: 30px 0;">
             
             <p style="color: #888; font-size: 14px; text-align: center;">
-              You're receiving this because you subscribed to live event notifications.
+              You're receiving this because you subscribed to live event notifications.<br>
+              Visit your profile to manage notification preferences.
             </p>
           </div>
         `
@@ -131,21 +135,24 @@ const sendLiveEventNotifications = async (liveEvent) => {
 // Get all live events (public)
 router.get('/', async (req, res) => {
   try {
-    const events = await prisma.liveEvent.findMany({
-      orderBy: { scheduledDate: 'desc' }
-    });
+    const liveEvents = await prisma.liveEvent.findMany({
+      orderBy: [
+        { scheduledDate: 'desc' }
+      ]
+    })
 
-    const eventsWithEmbeds = events.map(event => ({
+    // Add embed URLs
+    const eventsWithEmbeds = liveEvents.map(event => ({
       ...event,
       embedUrl: getEmbedUrl(event.streamUrl, event.platform)
-    }));
+    }))
 
-    res.json(eventsWithEmbeds);
+    res.json(eventsWithEmbeds)
   } catch (error) {
-    console.error('Live events fetch error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Live events fetch error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Get upcoming live events (public)
 router.get('/upcoming', async (req, res) => {
@@ -156,61 +163,69 @@ router.get('/upcoming', async (req, res) => {
           gte: new Date()
         }
       },
-      orderBy: { scheduledDate: 'asc' }
-    });
+      orderBy: [
+        { scheduledDate: 'asc' }
+      ]
+    })
 
     const eventsWithEmbeds = upcomingEvents.map(event => ({
       ...event,
       embedUrl: getEmbedUrl(event.streamUrl, event.platform)
-    }));
+    }))
 
-    res.json(eventsWithEmbeds);
+    res.json(eventsWithEmbeds)
   } catch (error) {
-    console.error('Upcoming live events fetch error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Upcoming live events fetch error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Get active live events (public)
 router.get('/active', async (req, res) => {
   try {
     const activeEvents = await prisma.liveEvent.findMany({
       where: {
-        isActive: true
+        isActive: true,
+        scheduledDate: {
+          lte: new Date(Date.now() + 30 * 60 * 1000) // Include events starting within 30 minutes
+        }
       },
-      orderBy: { scheduledDate: 'asc' }
-    });
+      orderBy: [
+        { scheduledDate: 'asc' }
+      ]
+    })
 
     const eventsWithEmbeds = activeEvents.map(event => ({
       ...event,
       embedUrl: getEmbedUrl(event.streamUrl, event.platform)
-    }));
+    }))
 
-    res.json(eventsWithEmbeds);
+    res.json(eventsWithEmbeds)
   } catch (error) {
-    console.error('Active live events fetch error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Active live events fetch error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Create live event (admin only)
 router.post('/', authenticateAdmin, async (req, res) => {
   try {
     const liveEvent = await prisma.liveEvent.create({
       data: req.body
-    });
+    })
 
     // Broadcast update
     if (req.app.get('io')) {
-      req.app.get('io').emit('live-event-created', liveEvent);
+      req.app.get('io').emit('live-event-created', liveEvent)
     }
+    broadcastContentUpdate('live-event-created', liveEvent)
 
-    res.status(201).json(liveEvent);
+    res.status(201).json(liveEvent)
   } catch (error) {
-    console.error('Live event creation error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Live event creation error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Update live event (admin only)
 router.put('/:id', authenticateAdmin, async (req, res) => {
@@ -218,19 +233,20 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
     const liveEvent = await prisma.liveEvent.update({
       where: { id: req.params.id },
       data: req.body
-    });
+    })
 
     // Broadcast update
     if (req.app.get('io')) {
-      req.app.get('io').emit('live-event-updated', liveEvent);
+      req.app.get('io').emit('live-event-updated', liveEvent)
     }
+    broadcastContentUpdate('live-event-updated', liveEvent)
 
-    res.json(liveEvent);
+    res.json(liveEvent)
   } catch (error) {
-    console.error('Live event update error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Live event update error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Activate live event and send notifications (admin only)
 router.post('/:id/activate', authenticateAdmin, async (req, res) => {
@@ -241,25 +257,26 @@ router.post('/:id/activate', authenticateAdmin, async (req, res) => {
         isActive: true,
         notificationsSent: true
       }
-    });
+    })
 
     // Send email notifications
-    const notificationsSent = await sendLiveEventNotifications(liveEvent);
+    const notificationsSent = await sendLiveEventNotifications(liveEvent)
 
     // Broadcast live event activation
     if (req.app.get('io')) {
-      req.app.get('io').emit('live-event-activated', liveEvent);
+      req.app.get('io').emit('live-event-activated', liveEvent)
     }
+    broadcastContentUpdate('live-event-activated', liveEvent)
 
     res.json({ 
       ...liveEvent, 
       notificationResult: notificationsSent ? 'sent' : 'failed' 
-    });
+    })
   } catch (error) {
-    console.error('Live event activation error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Live event activation error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Deactivate live event (admin only)
 router.post('/:id/deactivate', authenticateAdmin, async (req, res) => {
@@ -267,37 +284,39 @@ router.post('/:id/deactivate', authenticateAdmin, async (req, res) => {
     const liveEvent = await prisma.liveEvent.update({
       where: { id: req.params.id },
       data: { isActive: false }
-    });
+    })
 
     // Broadcast deactivation
     if (req.app.get('io')) {
-      req.app.get('io').emit('live-event-deactivated', liveEvent);
+      req.app.get('io').emit('live-event-deactivated', liveEvent)
     }
+    broadcastContentUpdate('live-event-deactivated', liveEvent)
 
-    res.json(liveEvent);
+    res.json(liveEvent)
   } catch (error) {
-    console.error('Live event deactivation error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Live event deactivation error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // Delete live event (admin only)
 router.delete('/:id', authenticateAdmin, async (req, res) => {
   try {
     await prisma.liveEvent.delete({
       where: { id: req.params.id }
-    });
+    })
 
     // Broadcast deletion
     if (req.app.get('io')) {
-      req.app.get('io').emit('live-event-deleted', { id: req.params.id });
+      req.app.get('io').emit('live-event-deleted', { id: req.params.id })
     }
+    broadcastContentUpdate('live-event-deleted', { id: req.params.id })
 
-    res.json({ message: 'Live event deleted successfully' });
+    res.json({ message: 'Live event deleted successfully' })
   } catch (error) {
-    console.error('Live event deletion error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Live event deletion error:', error)
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
-export default router;
+module.exports = router

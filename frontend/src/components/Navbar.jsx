@@ -62,6 +62,7 @@ const Navbar = () => {
     { name: 'Videos', path: '/videos' },
     { name: 'About', path: '/about' },
     { name: 'Tour', path: '/tour' },
+    { name: 'Live Events', path: '/live-events' },
     { name: 'Merch', path: '/merch' },
     { name: 'Fan Club', path: '/fan-club' },
     { name: 'Support', path: '/support' },
