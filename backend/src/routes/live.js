@@ -1,22 +1,46 @@
 import express from 'express';
 import { authenticateAdmin } from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
-import nodemailer from 'nodemailer';
+import fetch from 'node-fetch';
 
 const router = express.Router();
 
-// Email configuration
-const createEmailTransporter = () => {
-  if (process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    return nodemailer.createTransporter({
-      service: process.env.EMAIL_SERVICE,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    })
+// Brevo Email API configuration  
+const sendBrevoEmail = async (to, subject, htmlContent) => {
+  if (!process.env.BREVO_API_KEY) {
+    console.log('❌ BREVO_API_KEY not configured, skipping email')
+    return false
   }
-  return null
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: {
+          name: process.env.SENDER_NAME || 'Live Events',
+          email: process.env.SENDER_EMAIL
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: htmlContent
+      })
+    })
+
+    if (response.ok) {
+      return true
+    } else {
+      const error = await response.text()
+      console.error('❌ Brevo API error:', error)
+      return false
+    }
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+    return false
+  }
 }
 
 // Helper to extract embed URL from various platforms
@@ -58,11 +82,10 @@ const getEmbedUrl = (url, platform) => {
   }
 }
 
-// Send email notifications to all subscribers
+// Send email notifications to all subscribers using Brevo
 const sendLiveEventNotifications = async (liveEvent) => {
-  const transporter = createEmailTransporter()
-  if (!transporter) {
-    console.log('❌ Email not configured, skipping notifications')
+  if (!process.env.BREVO_API_KEY) {
+    console.log('❌ BREVO_API_KEY not configured, skipping notifications')
     return false
   }
 
@@ -76,52 +99,57 @@ const sendLiveEventNotifications = async (liveEvent) => {
       return true
     }
 
-    const emailPromises = subscribers.map(subscriber => {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: subscriber.email,
-        subject: `🎬 Live Event Starting Soon: ${liveEvent.title}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 20px;">
-            <h2 style="color: #9333ea; text-align: center;">🎬 Live Event Notification</h2>
-            
-            ${liveEvent.thumbnailUrl ? `
-              <div style="text-align: center; margin: 20px 0;">
-                <img src="${liveEvent.thumbnailUrl}" alt="${liveEvent.title}" style="max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
-              </div>
-            ` : ''}
-            
-            <h3 style="color: #fff;">${liveEvent.title}</h3>
-            
-            ${liveEvent.description ? `<p style="color: #ccc;">${liveEvent.description}</p>` : ''}
-            
-            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p><strong style="color: #9333ea;">📅 Scheduled:</strong> ${new Date(liveEvent.scheduledDate).toLocaleString()}</p>
-              <p><strong style="color: #9333ea;">🎥 Platform:</strong> ${liveEvent.platform.toUpperCase()}</p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/live-events" 
-                 style="background: linear-gradient(135deg, #9333ea, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                🎬 Watch Live Now
-              </a>
-            </div>
-            
-            <hr style="border: 1px solid #333; margin: 30px 0;">
-            
-            <p style="color: #888; font-size: 14px; text-align: center;">
-              You're receiving this because you subscribed to live event notifications.
-            </p>
+    // Create beautiful HTML email template
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #9333ea; text-align: center; margin-bottom: 30px;">🎬 Live Event Starting Soon!</h2>
+        
+        ${liveEvent.thumbnailUrl ? `
+          <div style="text-align: center; margin: 20px 0;">
+            <img src="${liveEvent.thumbnailUrl}" alt="${liveEvent.title}" style="max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
           </div>
-        `
-      }
+        ` : ''}
+        
+        <h3 style="color: #fff; text-align: center; margin: 20px 0;">${liveEvent.title}</h3>
+        
+        ${liveEvent.description ? `<p style="color: #ccc; text-align: center; margin-bottom: 30px;">${liveEvent.description}</p>` : ''}
+        
+        <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 10px 0;"><strong style="color: #9333ea;">📅 Scheduled:</strong> ${new Date(liveEvent.scheduledDate).toLocaleString()}</p>
+          <p style="margin: 10px 0;"><strong style="color: #9333ea;">🎥 Platform:</strong> ${liveEvent.platform.toUpperCase()}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 40px 0;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/live-events" 
+             style="background: linear-gradient(135deg, #9333ea, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">
+            🎬 Watch Live Now
+          </a>
+        </div>
+        
+        <hr style="border: 1px solid #333; margin: 30px 0;">
+        
+        <p style="color: #888; font-size: 14px; text-align: center; margin: 0;">
+          You're receiving this because you subscribed to live event notifications.<br>
+          Sent by ${process.env.SENDER_NAME || 'Live Events'}
+        </p>
+      </div>
+    `
 
-      return transporter.sendMail(mailOptions)
+    // Send emails using Brevo API
+    let successCount = 0
+    const emailPromises = subscribers.map(async (subscriber) => {
+      const success = await sendBrevoEmail(
+        subscriber.email,
+        `🎬 Live Event Starting Soon: ${liveEvent.title}`,
+        htmlContent
+      )
+      if (success) successCount++
+      return success
     })
 
     await Promise.all(emailPromises)
-    console.log(`📧 Sent live event notifications to ${subscribers.length} subscribers`)
-    return true
+    console.log(`📧 Sent live event notifications to ${successCount}/${subscribers.length} subscribers`)
+    return successCount > 0
   } catch (error) {
     console.error('❌ Failed to send notifications:', error)
     return false
