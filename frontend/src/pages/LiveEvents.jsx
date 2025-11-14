@@ -52,12 +52,168 @@ const LiveEvents = () => {
       case 'twitch': return '🎮'
       case 'meet': return '📹'
       case 'zoom': return '💻'
+      case 'whatsapp': return '📱'
+      case 'instagram': return '📸'
+      case 'linkedin': return '💼'
+      case 'vimeo': return '🎥'
+      case 'tiktok': return '🎵'
       default: return '🔗'
     }
   }
 
   const isEmbeddable = (platform) => {
-    return ['youtube', 'facebook', 'twitch'].includes(platform)
+    return ['youtube', 'facebook', 'twitch', 'vimeo', 'tiktok'].includes(platform)
+  }
+
+  const needsCustomPlayer = (platform) => {
+    return ['meet', 'zoom', 'whatsapp', 'instagram', 'linkedin'].includes(platform)
+  }
+
+  const CustomPlatformPlayer = ({ event }) => {
+    const { platform, streamUrl, title } = event
+
+    const openInNewWindow = () => {
+      const width = 1024
+      const height = 768
+      const left = (window.screen.width - width) / 2
+      const top = (window.screen.height - height) / 2
+      
+      window.open(
+        streamUrl,
+        'live-event',
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
+      )
+    }
+
+    const getCustomPlayerContent = () => {
+      switch (platform) {
+        case 'meet':
+          return (
+            <div className="bg-gradient-to-br from-blue-900 to-green-900 rounded-lg p-8 text-center">
+              <div className="text-6xl mb-4">📹</div>
+              <h3 className="text-2xl font-bold text-white mb-4">Google Meet Live Session</h3>
+              <p className="text-gray-300 mb-6">
+                Join the live session in a focused popup window to stay connected while browsing our site.
+              </p>
+              <button
+                onClick={openInNewWindow}
+                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+              >
+                🚀 Join Meet Session
+              </button>
+              <p className="text-sm text-gray-400 mt-4">
+                Opens in a popup window - you can resize and position it anywhere
+              </p>
+            </div>
+          )
+
+        case 'zoom':
+          return (
+            <div className="bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg p-8 text-center">
+              <div className="text-6xl mb-4">💻</div>
+              <h3 className="text-2xl font-bold text-white mb-4">Zoom Live Session</h3>
+              <p className="text-gray-300 mb-6">
+                Join the live Zoom session in a popup window. Keep it open alongside our site!
+              </p>
+              <button
+                onClick={openInNewWindow}
+                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+              >
+                🎥 Join Zoom Session
+              </button>
+              <p className="text-sm text-gray-400 mt-4">
+                Opens in a popup window - perfect for multitasking
+              </p>
+            </div>
+          )
+
+        case 'whatsapp':
+          return (
+            <div className="bg-gradient-to-br from-green-900 to-green-700 rounded-lg p-8 text-center">
+              <div className="text-6xl mb-4">📱</div>
+              <h3 className="text-2xl font-bold text-white mb-4">WhatsApp Live Chat</h3>
+              <p className="text-gray-300 mb-6">
+                Join our live WhatsApp group chat in a popup window while staying on our site.
+              </p>
+              <button
+                onClick={openInNewWindow}
+                className="bg-white text-green-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+              >
+                💬 Join WhatsApp Chat
+              </button>
+              <p className="text-sm text-gray-400 mt-4">
+                Opens WhatsApp Web in a popup window
+              </p>
+            </div>
+          )
+
+        case 'instagram':
+          return (
+            <div className="bg-gradient-to-br from-pink-900 to-purple-900 rounded-lg p-8 text-center">
+              <div className="text-6xl mb-4">📸</div>
+              <h3 className="text-2xl font-bold text-white mb-4">Instagram Live</h3>
+              <p className="text-gray-300 mb-6">
+                Watch the Instagram Live session in a popup window. Stay connected to both!
+              </p>
+              <button
+                onClick={openInNewWindow}
+                className="bg-white text-pink-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+              >
+                📱 Watch Instagram Live
+              </button>
+              <p className="text-sm text-gray-400 mt-4">
+                Opens Instagram in a popup window
+              </p>
+            </div>
+          )
+
+        case 'linkedin':
+          return (
+            <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-lg p-8 text-center">
+              <div className="text-6xl mb-4">💼</div>
+              <h3 className="text-2xl font-bold text-white mb-4">LinkedIn Live</h3>
+              <p className="text-gray-300 mb-6">
+                Join the professional LinkedIn Live session in a popup window.
+              </p>
+              <button
+                onClick={openInNewWindow}
+                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+              >
+                💼 Join LinkedIn Live
+              </button>
+              <p className="text-sm text-gray-400 mt-4">
+                Opens LinkedIn in a popup window
+              </p>
+            </div>
+          )
+
+        default:
+          return (
+            <div className="bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg p-8 text-center">
+              <div className="text-6xl mb-4">🔗</div>
+              <h3 className="text-2xl font-bold text-white mb-4">Live Session</h3>
+              <p className="text-gray-300 mb-6">
+                Join the live session in a popup window while staying on our site.
+              </p>
+              <button
+                onClick={openInNewWindow}
+                className="bg-white text-gray-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+              >
+                🚀 Join Live Session
+              </button>
+              <p className="text-sm text-gray-400 mt-4">
+                Opens in a popup window
+              </p>
+            </div>
+          )
+      }
+    }
+
+    return (
+      <div className="aspect-video mb-4 rounded-lg overflow-hidden">
+        {getCustomPlayerContent()}
+      </div>
+    )
   }
 
   const SupportButton = () => {
@@ -146,30 +302,52 @@ const LiveEvents = () => {
                       <p className="text-gray-300 mb-4">{event.description}</p>
                     )}
 
-                    {/* Embedded Stream */}
+                    {/* Enhanced Embedded Stream */}
                     {isEmbeddable(event.platform) && event.embedUrl ? (
+                      // Fully embeddable platforms (YouTube, Facebook, Twitch, Vimeo, TikTok)
                       <div className="aspect-video mb-4 rounded-lg overflow-hidden bg-black">
                         <iframe
                           src={event.embedUrl}
                           className="w-full h-full"
                           frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                           allowFullScreen
+                          title={event.title}
                         />
                       </div>
+                    ) : needsCustomPlayer(event.platform) ? (
+                      // Custom popup players for platforms that can't be fully embedded
+                      <CustomPlatformPlayer event={event} />
                     ) : (
-                      <div className="bg-gray-800 rounded-lg p-6 text-center mb-4">
-                        <p className="text-gray-400 mb-4">
-                          This stream is hosted on {event.platform.toUpperCase()}
-                        </p>
-                        <a
-                          href={event.streamUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-primary inline-flex items-center gap-2"
-                        >
-                          <FaExternalLinkAlt /> Watch on {event.platform.toUpperCase()}
-                        </a>
+                      // Fallback for any other platforms
+                      <div className="aspect-video mb-4 rounded-lg overflow-hidden">
+                        <div className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg p-8 text-center h-full flex flex-col justify-center">
+                          <div className="text-6xl mb-4">🎬</div>
+                          <h3 className="text-2xl font-bold text-white mb-4">{event.platform.toUpperCase()} Live</h3>
+                          <p className="text-gray-300 mb-6">
+                            Experience this live event in a dedicated popup window while staying on our site.
+                          </p>
+                          <button
+                            onClick={() => {
+                              const width = 1024
+                              const height = 768
+                              const left = (window.screen.width - width) / 2
+                              const top = (window.screen.height - height) / 2
+                              
+                              window.open(
+                                event.streamUrl,
+                                'live-event',
+                                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
+                              )
+                            }}
+                            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+                          >
+                            🚀 Join Live Event
+                          </button>
+                          <p className="text-sm text-gray-400 mt-4">
+                            Opens in a popup window - perfect for multitasking
+                          </p>
+                        </div>
                       </div>
                     )}
 

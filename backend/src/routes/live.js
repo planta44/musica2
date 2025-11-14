@@ -48,7 +48,7 @@ const getEmbedUrl = (url, platform) => {
   if (!url) return null
 
   try {
-    // YouTube
+    // YouTube - Full embedding support
     if (platform === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
       let videoId = null
       
@@ -60,25 +60,64 @@ const getEmbedUrl = (url, platform) => {
         return url
       }
       
-      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0` : null
+      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1` : null
     }
 
-    // Facebook
+    // Facebook - Full embedding support
     if (platform === 'facebook' || url.includes('facebook.com')) {
-      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=false`
+      const encodedUrl = encodeURIComponent(url)
+      return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&autoplay=false&width=100%&height=100%`
     }
 
-    // Twitch
+    // Twitch - Full embedding support
     if (platform === 'twitch' || url.includes('twitch.tv')) {
       const channel = url.split('twitch.tv/')[1]?.split('/')[0]
-      return channel ? `https://player.twitch.tv/?channel=${channel}&parent=${process.env.FRONTEND_DOMAIN || 'localhost'}` : null
+      const domain = process.env.FRONTEND_DOMAIN || 'localhost'
+      return channel ? `https://player.twitch.tv/?channel=${channel}&parent=${domain}&autoplay=false` : null
     }
 
-    // For other platforms (Meet, Zoom, etc.), return original URL
-    return url
+    // Instagram Live - Limited embedding
+    if (platform === 'instagram' || url.includes('instagram.com')) {
+      // Instagram doesn't allow direct embedding, but we can create a custom player
+      return null // Will be handled by custom player
+    }
+
+    // LinkedIn Live - Limited embedding  
+    if (platform === 'linkedin' || url.includes('linkedin.com')) {
+      // LinkedIn has limited embedding support
+      return null // Will be handled by custom player
+    }
+
+    // TikTok Live - Embedding support
+    if (platform === 'tiktok' || url.includes('tiktok.com')) {
+      const videoId = url.split('/video/')[1]?.split('?')[0]
+      return videoId ? `https://www.tiktok.com/embed/v2/${videoId}` : null
+    }
+
+    // Vimeo - Full embedding support
+    if (platform === 'vimeo' || url.includes('vimeo.com')) {
+      const videoId = url.split('vimeo.com/')[1]?.split('?')[0]
+      return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=0&title=0&byline=0&portrait=0` : null
+    }
+
+    // For platforms like Google Meet, Zoom, WhatsApp - Create custom embedded experience
+    if (platform === 'meet' || url.includes('meet.google.com')) {
+      return null // Will be handled by custom Meet player
+    }
+
+    if (platform === 'zoom' || url.includes('zoom.us')) {
+      return null // Will be handled by custom Zoom player
+    }
+
+    if (platform === 'whatsapp' || url.includes('whatsapp.com')) {
+      return null // Will be handled by custom WhatsApp player
+    }
+
+    // Generic URL - try to create iframe-friendly version
+    return null // Will be handled by custom player
   } catch (error) {
     console.error('Error processing embed URL:', error)
-    return url
+    return null
   }
 }
 
