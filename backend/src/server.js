@@ -25,6 +25,7 @@ import purchaseRoutes from './routes/purchases.js';
 import contactRoutes from './routes/contact.js';
 import uploadRoutes from './routes/upload.js';
 import liveRoutes from './routes/live.js';
+import supportRoutes from './routes/support.js';
 
 dotenv.config();
 
@@ -133,6 +134,7 @@ app.use('/api/purchases', purchaseRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/live', liveRoutes);
+app.use('/api/support', supportRoutes);
 
 // Enhanced error handler with better logging
 app.use((err, req, res, next) => {

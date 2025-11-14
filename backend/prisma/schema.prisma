@@ -249,3 +249,16 @@ model ContactSubmission {
   type      String   @default("general") // general, booking, press
   createdAt DateTime @default(now())
 }
+
+model SupportSettings {
+  id              String   @id @default(uuid())
+  mpesaNumber     String?
+  mpesaName       String?
+  bankCardNumber  String?
+  bankName        String?
+  bankAccountName String?
+  paypalEmail     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

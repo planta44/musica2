@@ -209,6 +209,11 @@ export const uploadFiles = (files) => {
   })
 }
 
+// Support Settings
+export const getSupportSettings = () => api.get('/support').then(response => response.data)
+export const getAdminSupportSettings = () => api.get('/support/admin').then(response => response.data)
+export const updateSupportSettings = (data) => api.post('/support/admin', data).then(response => response.data)
+
 // Live Events
 export const getLiveEvents = () => api.get('/live').then(response => response.data)
 export const getUpcomingLiveEvents = () => api.get('/live/upcoming').then(response => response.data)

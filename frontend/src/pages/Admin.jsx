@@ -18,6 +18,7 @@ import AdminAbout from '../components/admin/AdminAbout'
 import AdminSubscribers from '../components/admin/AdminSubscribers'
 import AdminContacts from '../components/admin/AdminContacts'
 import AdminLiveEvents from '../components/admin/AdminLiveEvents'
+import AdminSupportSettings from '../components/admin/AdminSupportSettings'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'johnsonmbuguamuhabi@gmail.com'
 
@@ -160,6 +161,7 @@ const AdminNav = ({ currentPage, onNavigate, onLogout }) => {
     { id: 'merch', label: 'Merch' },
     { id: 'about', label: 'About' },
     { id: 'live', label: 'Live Events' },
+    { id: 'support', label: 'Support Settings' },
     { id: 'subscribers', label: 'Subscribers' },
     { id: 'contacts', label: 'Contacts' },
   ]
@@ -242,6 +244,7 @@ const Admin = () => {
           {currentPage === 'merch' && <AdminMerch />}
           {currentPage === 'about' && <AdminAbout />}
           {currentPage === 'live' && <AdminLiveEvents />}
+          {currentPage === 'support' && <AdminSupportSettings />}
           {currentPage === 'subscribers' && <AdminSubscribers />}
           {currentPage === 'contacts' && <AdminContacts />}
         </div>

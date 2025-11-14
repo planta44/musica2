@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaCalendar, FaExternalLinkAlt, FaDonate, FaHeart } from 'react-icons/fa'
 import { format } from 'date-fns'
@@ -59,9 +60,7 @@ const LiveEvents = () => {
     return ['youtube', 'facebook', 'twitch'].includes(platform)
   }
 
-  const SupportButton = ({ event }) => {
-    if (!event.supportPaypalUrl && !event.supportStripeUrl) return null
-
+  const SupportButton = () => {
     return (
       <motion.div 
         className="fixed bottom-6 right-6 z-50"
@@ -69,43 +68,18 @@ const LiveEvents = () => {
         animate={{ scale: 1 }}
         transition={{ delay: 2, type: "spring" }}
       >
-        <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-4 shadow-2xl">
-          <div className="flex items-center gap-2">
-            <FaHeart className="text-white animate-pulse" />
-            <span className="text-white font-bold text-sm">Support Me</span>
-          </div>
-          
-          <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 animate-bounce">
-            <FaDonate className="text-white text-xs" />
-          </div>
-
-          {/* Support Options Dropdown */}
-          <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur rounded-lg p-3 min-w-[200px] opacity-0 hover:opacity-100 transition-opacity">
-            <p className="text-white text-sm font-bold mb-2">💝 Support the Artist</p>
-            <div className="space-y-2">
-              {event.supportPaypalUrl && (
-                <a 
-                  href={event.supportPaypalUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm transition-colors"
-                >
-                  💳 PayPal Donation
-                </a>
-              )}
-              {event.supportStripeUrl && (
-                <a 
-                  href={event.supportStripeUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm transition-colors"
-                >
-                  💰 Card Payment
-                </a>
-              )}
+        <Link to="/support-me">
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all duration-300 cursor-pointer group">
+            <div className="flex items-center gap-2">
+              <FaHeart className="text-white animate-pulse group-hover:scale-110 transition-transform" />
+              <span className="text-white font-bold text-sm">Support Me</span>
+            </div>
+            
+            <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 animate-bounce">
+              <FaDonate className="text-white text-xs" />
             </div>
           </div>
-        </div>
+        </Link>
       </motion.div>
     )
   }
@@ -294,6 +268,9 @@ const LiveEvents = () => {
           </a>
         </div>
       </section>
+
+      {/* Support Me Button - Only show if there are active events */}
+      {activeEvents.length > 0 && <SupportButton />}
     </div>
   )
 }
