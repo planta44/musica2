@@ -57,16 +57,26 @@ const getEmbedUrl = (url, platform) => {
       } else if (url.includes('youtu.be/')) {
         videoId = url.split('youtu.be/')[1]?.split('?')[0]
       } else if (url.includes('youtube.com/embed/')) {
-        return url
+        return url + '?autoplay=0&rel=0&modestbranding=1'
+      } else if (url.includes('youtube.com/live/')) {
+        videoId = url.split('youtube.com/live/')[1]?.split('?')[0]
       }
       
-      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1` : null
+      if (videoId) {
+        console.log(`✅ YouTube embed URL created: https://www.youtube.com/embed/${videoId}`)
+        return `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1`
+      }
+      
+      console.log(`❌ Could not extract YouTube video ID from: ${url}`)
+      return null
     }
 
     // Facebook - Full embedding support
     if (platform === 'facebook' || url.includes('facebook.com')) {
       const encodedUrl = encodeURIComponent(url)
-      return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&autoplay=false&width=100%&height=100%`
+      const embedUrl = `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&autoplay=false&width=100%&height=100%`
+      console.log(`✅ Facebook embed URL created: ${embedUrl}`)
+      return embedUrl
     }
 
     // Twitch - Full embedding support

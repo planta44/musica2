@@ -303,53 +303,126 @@ const LiveEvents = () => {
                     )}
 
                     {/* Enhanced Embedded Stream */}
-                    {isEmbeddable(event.platform) && event.embedUrl ? (
-                      // Fully embeddable platforms (YouTube, Facebook, Twitch, Vimeo, TikTok)
-                      <div className="aspect-video mb-4 rounded-lg overflow-hidden bg-black">
-                        <iframe
-                          src={event.embedUrl}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                          allowFullScreen
-                          title={event.title}
-                        />
-                      </div>
-                    ) : needsCustomPlayer(event.platform) ? (
-                      // Custom popup players for platforms that can't be fully embedded
-                      <CustomPlatformPlayer event={event} />
-                    ) : (
-                      // Fallback for any other platforms
-                      <div className="aspect-video mb-4 rounded-lg overflow-hidden">
-                        <div className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg p-8 text-center h-full flex flex-col justify-center">
-                          <div className="text-6xl mb-4">🎬</div>
-                          <h3 className="text-2xl font-bold text-white mb-4">{event.platform.toUpperCase()} Live</h3>
-                          <p className="text-gray-300 mb-6">
-                            Experience this live event in a dedicated popup window while staying on our site.
-                          </p>
-                          <button
-                            onClick={() => {
-                              const width = 1024
-                              const height = 768
-                              const left = (window.screen.width - width) / 2
-                              const top = (window.screen.height - height) / 2
+                    {(() => {
+                      // Force embedding for certain platforms even if embedUrl is missing
+                      const shouldForceEmbed = ['youtube', 'facebook', 'twitch', 'vimeo', 'tiktok'].includes(event.platform)
+                      const hasEmbedUrl = event.embedUrl && event.embedUrl !== event.streamUrl
+                      
+                      console.log('Debug embedding:', {
+                        platform: event.platform,
+                        embedUrl: event.embedUrl,
+                        streamUrl: event.streamUrl,
+                        shouldForceEmbed,
+                        hasEmbedUrl,
+                        isEmbeddable: isEmbeddable(event.platform)
+                      })
+
+                      if (shouldForceEmbed || (isEmbeddable(event.platform) && hasEmbedUrl)) {
+                        // Create embed URL if missing for YouTube/Facebook
+                        let finalEmbedUrl = event.embedUrl
+                        
+                        if (!hasEmbedUrl && event.platform === 'youtube') {
+                          // Extract YouTube video ID and create embed URL  
+                          let videoId = null
+                          const url = event.streamUrl
+                          
+                          if (url.includes('youtube.com/watch?v=')) {
+                            videoId = url.split('v=')[1]?.split('&')[0]
+                          } else if (url.includes('youtu.be/')) {
+                            videoId = url.split('youtu.be/')[1]?.split('?')[0]
+                          } else if (url.includes('youtube.com/live/')) {
+                            videoId = url.split('youtube.com/live/')[1]?.split('?')[0]
+                          } else if (url.includes('youtube.com/embed/')) {
+                            finalEmbedUrl = url + '?autoplay=0&rel=0&modestbranding=1'
+                          }
+                          
+                          if (videoId) {
+                            finalEmbedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1`
+                            console.log('Created YouTube embed URL:', finalEmbedUrl)
+                          }
+                        }
+                        
+                        if (!hasEmbedUrl && event.platform === 'facebook') {
+                          // Create Facebook embed URL
+                          finalEmbedUrl = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(event.streamUrl)}&show_text=false&autoplay=false&width=100%&height=100%`
+                        }
+
+                        if (finalEmbedUrl && finalEmbedUrl !== event.streamUrl) {
+                          return (
+                            <div>
+                              {/* Debug Info - Remove this after testing */}
+                              <div className="bg-gray-800 text-xs text-gray-300 p-2 mb-2 rounded">
+                                <strong>Debug:</strong><br/>
+                                Platform: {event.platform}<br/>
+                                Original URL: {event.streamUrl}<br/>
+                                Embed URL: {finalEmbedUrl}<br/>
+                                Should Embed: Yes ✅
+                              </div>
                               
-                              window.open(
-                                event.streamUrl,
-                                'live-event',
-                                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
-                              )
-                            }}
-                            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
-                          >
-                            🚀 Join Live Event
-                          </button>
-                          <p className="text-sm text-gray-400 mt-4">
-                            Opens in a popup window - perfect for multitasking
-                          </p>
+                              <div className="aspect-video mb-4 rounded-lg overflow-hidden bg-black">
+                                <iframe
+                                  src={finalEmbedUrl}
+                                  className="w-full h-full"
+                                  frameBorder="0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                  allowFullScreen
+                                  title={event.title}
+                                />
+                              </div>
+                            </div>
+                          )
+                        }
+                      }
+
+                      // Custom popup players for platforms that can't be fully embedded
+                      if (needsCustomPlayer(event.platform)) {
+                        return <CustomPlatformPlayer event={event} />
+                      }
+
+                      // Fallback for any other platforms
+                      return (
+                        <div>
+                          {/* Debug Info - Remove this after testing */}
+                          <div className="bg-red-800 text-xs text-white p-2 mb-2 rounded">
+                            <strong>Debug (Fallback):</strong><br/>
+                            Platform: {event.platform}<br/>
+                            Original URL: {event.streamUrl}<br/>
+                            Embed URL: {event.embedUrl || 'None'}<br/>
+                            Should Embed: No ❌ (Using popup instead)
+                          </div>
+                          
+                          <div className="aspect-video mb-4 rounded-lg overflow-hidden">
+                            <div className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg p-8 text-center h-full flex flex-col justify-center">
+                              <div className="text-6xl mb-4">🎬</div>
+                              <h3 className="text-2xl font-bold text-white mb-4">{event.platform.toUpperCase()} Live</h3>
+                              <p className="text-gray-300 mb-6">
+                                Experience this live event in a dedicated popup window while staying on our site.
+                              </p>
+                              <button
+                                onClick={() => {
+                                  const width = 1024
+                                  const height = 768
+                                  const left = (window.screen.width - width) / 2
+                                  const top = (window.screen.height - height) / 2
+                                  
+                                  window.open(
+                                    event.streamUrl,
+                                    'live-event',
+                                    `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
+                                  )
+                                }}
+                                className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-200 text-lg"
+                              >
+                                🚀 Join Live Event
+                              </button>
+                              <p className="text-sm text-gray-400 mt-4">
+                                Opens in a popup window - perfect for multitasking
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )
+                    })()}
 
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <span>Started: {format(new Date(event.scheduledDate), 'p')}</span>
