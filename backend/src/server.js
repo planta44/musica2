@@ -239,3 +239,4 @@ httpServer.listen(PORT, async () => {
   // Initialize admin account
   await initializeAdmin();
 });
+

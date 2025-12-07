@@ -61,3 +61,7 @@ backend/prisma/migrations/**/migration.sql
 
 # Local environment
 .env.*.local
+
+*.md
+*.mdd
+
