@@ -65,3 +65,6 @@ backend/prisma/migrations/**/migration.sql
 *.md
 *.mdd
 
+
+*.txt
+
