@@ -243,10 +243,15 @@ router.post('/stripe/webhook', express.raw({ type: 'application/json' }), async 
   }
 });
 
+// PayPal configuration - use live or sandbox based on environment
+const PAYPAL_BASE_URL = process.env.PAYPAL_MODE === 'sandbox' 
+  ? 'https://api-m.sandbox.paypal.com'
+  : 'https://api-m.paypal.com';
+
 // PayPal helper to get access token
 const getPayPalAccessToken = async () => {
   const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
-  const response = await fetch(`https://api-m.paypal.com/v1/oauth2/token`, {
+  const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -295,7 +300,7 @@ router.post('/paypal/create-music-order', async (req, res) => {
       }
     };
     
-    const response = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -351,7 +356,7 @@ router.post('/paypal/create-live-order', async (req, res) => {
       }
     };
     
-    const response = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -406,7 +411,7 @@ router.post('/paypal/create-merch-order', async (req, res) => {
       }
     };
     
-    const response = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -455,7 +460,7 @@ router.post('/paypal/create-support-order', async (req, res) => {
       }
     };
     
-    const response = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -478,7 +483,7 @@ router.post('/paypal/capture-order', async (req, res) => {
     
     const accessToken = await getPayPalAccessToken();
     
-    const response = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

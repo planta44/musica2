@@ -218,13 +218,14 @@ const SupportMe = () => {
 
                 <div className="text-center">
                   <a
-                    href={`https://paypal.me/${settings.paypalEmail.split('@')[0]}`}
+                    href={`https://www.paypal.com/paypalme/${settings.paypalUsername || settings.paypalEmail.split('@')[0]}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-600 transition-all duration-200 inline-block"
                   >
                     Send via PayPal →
                   </a>
+                  <p className="text-xs text-gray-500 mt-2">Or send directly to: {settings.paypalEmail}</p>
                 </div>
               </div>
             </div>

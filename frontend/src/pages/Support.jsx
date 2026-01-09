@@ -3,6 +3,9 @@ import { motion } from 'framer-motion'
 import { FaHeart, FaCreditCard, FaPaypal, FaMobileAlt } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import { createDonationSession } from '../lib/api'
+import axios from 'axios'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 const Support = () => {
   const [amount, setAmount] = useState('')
@@ -35,17 +38,25 @@ const Support = () => {
         const { data } = await createDonationSession(donationAmount, email)
         window.location.href = data.url
       } else if (paymentMethod === 'paypal') {
-        // Open PayPal.me link or integrate PayPal SDK
-        const paypalUrl = `https://www.paypal.me/yourusername/${donationAmount}`
-        window.open(paypalUrl, '_blank')
-        toast.success('Redirecting to PayPal...')
+        // Use PayPal API integration
+        const response = await axios.post(`${API_URL}/payments/paypal/create-support-order`, {
+          amount: donationAmount,
+          customerEmail: email,
+          message: 'Support & Donation'
+        })
+        
+        if (response.data.approvalUrl) {
+          window.location.href = response.data.approvalUrl
+        } else {
+          toast.error('Failed to create PayPal order')
+        }
       } else if (paymentMethod === 'mpesa') {
         toast.info('M-Pesa integration coming soon!')
         // Implement M-Pesa STK push
       }
     } catch (error) {
       console.error('Donation error:', error)
-      toast.error('Failed to process donation')
+      toast.error(error.response?.data?.error || 'Failed to process donation')
     } finally {
       setLoading(false)
     }
