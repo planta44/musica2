@@ -31,6 +31,12 @@ services:
         value: johnsonmbuguamuhabi@gmail.com
       - key: SMTP_PASSWORD
         value: pfqo ptxr fkab otny
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_MODE
+        value: live
 
 databases:
   - name: musician-db

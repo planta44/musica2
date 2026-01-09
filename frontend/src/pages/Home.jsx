@@ -317,7 +317,7 @@ const Home = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <div className="card p-8">
+                    <div className="p-8 rounded-xl backdrop-blur-md bg-white/10 border border-white/20 shadow-xl">
                       <h3 className="text-2xl font-bold mb-4 gradient-text">{section.title}</h3>
                       {/* Mobile text (60 words) */}
                       <p className="md:hidden text-gray-300 leading-relaxed text-lg text-left">
